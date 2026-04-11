@@ -1,0 +1,76 @@
+{
+  "name": "edgeshield",
+  "version": "0.1.0",
+  "description": "Edge-native and storage-agnostic rate limiting for modern TypeScript runtimes.",
+  "type": "module",
+  "keywords": [
+    "edge",
+    "rate-limit",
+    "nextjs",
+    "middleware",
+    "security",
+    "typescript"
+  ],
+  "homepage": "https://github.com/joseignacio/security-misc/tree/main/edgeshield",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joseignacio/security-misc.git",
+    "directory": "edgeshield"
+  },
+  "bugs": {
+    "url": "https://github.com/joseignacio/security-misc/issues"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./ratelimit": {
+      "types": "./dist/ratelimit/index.d.ts",
+      "import": "./dist/ratelimit/index.js"
+    },
+    "./storage/memory": {
+      "types": "./dist/storage/memory.d.ts",
+      "import": "./dist/storage/memory.js"
+    },
+    "./storage/upstash": {
+      "types": "./dist/storage/upstash.d.ts",
+      "import": "./dist/storage/upstash.js"
+    },
+    "./middleware/nextjs": {
+      "types": "./dist/middleware/nextjs.d.ts",
+      "import": "./dist/middleware/nextjs.js"
+    }
+  },
+  "files": [
+    "dist",
+    "assets/logo.svg"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist coverage",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "security:audit": "npm audit --audit-level=moderate",
+    "security:static": "npm run lint && npm run typecheck",
+    "prepublishOnly": "npm run clean && npm run build && npm run test:coverage"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.24.0",
+    "@types/node": "^22.14.1",
+    "@vitest/coverage-v8": "^3.1.1",
+    "eslint": "^9.24.0",
+    "globals": "^16.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.29.0",
+    "vitest": "^3.1.1"
+  }
+}
