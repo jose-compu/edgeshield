@@ -1,0 +1,32 @@
+import { describe, expect, it, vi } from "vitest";
+import { edgeshield } from "../../src/middleware/hono";
+
+describe("hono middleware", () => {
+  it("calls next when guards pass", async () => {
+    const middleware = edgeshield({
+      check: async () => ({ success: true, status: 200, reason: "ok" })
+    });
+    const next = vi.fn().mockResolvedValue(undefined);
+    const context = {
+      req: { raw: new Request("https://example.com") },
+      newResponse: (body: BodyInit | null, status = 200, headers?: HeadersInit) =>
+        new Response(body, headers ? { status, headers } : { status })
+    };
+    const result = await middleware(context, next);
+    expect(result).toBeUndefined();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns blocked response when guard fails", async () => {
+    const middleware = edgeshield({
+      check: async () => ({ success: false, status: 403, reason: "blocked" })
+    });
+    const context = {
+      req: { raw: new Request("https://example.com") },
+      newResponse: (body: BodyInit | null, status = 200, headers?: HeadersInit) =>
+        new Response(body, headers ? { status, headers } : { status })
+    };
+    const result = await middleware(context, async () => undefined);
+    expect(result?.status).toBe(403);
+  });
+});

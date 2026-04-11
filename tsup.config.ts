@@ -4,10 +4,13 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/bot/index.ts",
+    "src/csrf/index.ts",
     "src/ratelimit/index.ts",
     "src/storage/cloudflare-kv.ts",
+    "src/storage/vercel-kv.ts",
     "src/storage/memory.ts",
     "src/storage/upstash.ts",
+    "src/middleware/hono.ts",
     "src/middleware/nextjs.ts"
   ],
   format: ["esm"],

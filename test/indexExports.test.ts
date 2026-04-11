@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   createVdfChallenge,
+  csrfGuard,
+  honoMiddleware,
   memory,
   presets,
   rateLimit,
   slidingWindow,
   upstash,
-  VDF
+  VDF,
+  vercelKV
 } from "../src/index";
 
 describe("public exports", () => {
@@ -17,6 +20,9 @@ describe("public exports", () => {
     expect(typeof upstash).toBe("function");
     expect(typeof createVdfChallenge).toBe("function");
     expect(typeof VDF.compute).toBe("function");
+    expect(typeof csrfGuard).toBe("function");
+    expect(typeof vercelKV).toBe("function");
+    expect(typeof honoMiddleware).toBe("function");
   });
 
   it("builds preset limiters", async () => {

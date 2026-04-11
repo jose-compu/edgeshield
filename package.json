@@ -1,6 +1,6 @@
 {
   "name": "edgeshield",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Edge-native security toolkit with rate limiting, bot detection, and pluggable storage.",
   "type": "module",
   "keywords": [
@@ -8,6 +8,9 @@
     "rate-limit",
     "bot-detection",
     "cloudflare-kv",
+    "csrf",
+    "hono",
+    "vercel-kv",
     "nextjs",
     "middleware",
     "security",
@@ -39,9 +42,17 @@
       "types": "./dist/bot/index.d.ts",
       "import": "./dist/bot/index.js"
     },
+    "./csrf": {
+      "types": "./dist/csrf/index.d.ts",
+      "import": "./dist/csrf/index.js"
+    },
     "./storage/cloudflare-kv": {
       "types": "./dist/storage/cloudflare-kv.d.ts",
       "import": "./dist/storage/cloudflare-kv.js"
+    },
+    "./storage/vercel-kv": {
+      "types": "./dist/storage/vercel-kv.d.ts",
+      "import": "./dist/storage/vercel-kv.js"
     },
     "./storage/memory": {
       "types": "./dist/storage/memory.d.ts",
@@ -54,6 +65,10 @@
     "./middleware/nextjs": {
       "types": "./dist/middleware/nextjs.d.ts",
       "import": "./dist/middleware/nextjs.js"
+    },
+    "./middleware/hono": {
+      "types": "./dist/middleware/hono.d.ts",
+      "import": "./dist/middleware/hono.js"
     }
   },
   "files": [

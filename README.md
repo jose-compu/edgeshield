@@ -10,7 +10,7 @@
 
 Edge-native security toolkit for modern TypeScript runtimes.
 
-Current release scope: `v0.2.0` includes rate limiting + bot detection. CSRF protection remains planned for `v0.3.0`.
+Current release scope: `v0.3.0` includes rate limiting + bot detection + CSRF protection.
 
 ## Install
 
@@ -91,14 +91,66 @@ const limiter = rateLimit({
 });
 ```
 
-## Features in v0.2.0
+## CSRF Guard (v0.3.0)
+
+```ts
+import { csrfGuard } from "edgeshield/csrf";
+
+const csrf = csrfGuard({
+  mode: "double-submit",
+  secret: process.env.CSRF_SECRET!,
+  ttl: "1h",
+  ignorePaths: ["/api/webhooks/**"]
+});
+
+const token = await csrf.generate(request);
+const cookie = csrf.buildCookie(token);
+
+const verify = await csrf.verify(request);
+if (!verify.valid) {
+  return new Response("Forbidden", { status: 403 });
+}
+```
+
+## Vercel KV Adapter
+
+```ts
+import { vercelKV } from "edgeshield/storage/vercel-kv";
+
+const storage = vercelKV({
+  client: kv,
+  prefix: "edgeshield"
+});
+```
+
+## Hono Middleware
+
+```ts
+import { Hono } from "hono";
+import { edgeshield } from "edgeshield/middleware/hono";
+import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+import { botGuard } from "edgeshield/bot";
+
+const app = new Hono();
+
+app.use(
+  "/api/*",
+  edgeshield(
+    rateLimit({ storage, algorithm: slidingWindow(100, "15m") }),
+    botGuard({ mode: "block", threshold: 60 })
+  )
+);
+```
+
+## Features in v0.3.0
 
 - Sliding and fixed window algorithms
 - Multi-tier rate limiting
 - Bot detection (`detect` and `block` modes)
 - Sloth VDF challenge support for suspicious bot traffic
-- Memory, Upstash, and Cloudflare KV adapters
-- Next.js middleware helper
+- CSRF protection (`double-submit` and `origin-check`)
+- Memory, Upstash, Cloudflare KV, and Vercel KV adapters
+- Next.js and Hono middleware helpers
 - TypeScript-first API
 
 ## Comparison
@@ -111,10 +163,10 @@ Note: the table reflects the full product vision across roadmap versions.
 | Storage-agnostic | Yes | Upstash only | Redis/Mongo/Postgres | Memory/Redis |
 | Rate limiting | Yes (`v0.1.0`) | Yes | Yes | Yes |
 | Bot detection | Yes (`v0.2.0`) | No | No | No |
-| CSRF protection | Planned (`v0.3.0`) | No | No | No |
+| CSRF protection | Yes (`v0.3.0`) | No | No | No |
 | Tree-shakeable subpaths | Yes | No | No | No |
 | Zero dependencies | Yes | Needs @upstash/redis | 0 deps (core) | 0 deps |
-| Bundle size target | < 4 KB | ~8 KB | ~15 KB | ~5 KB |
+| Bundle size target | < 4 KB (core ratelimit subpath) | ~8 KB | ~15 KB | ~5 KB |
 
 ## Roadmap
 
