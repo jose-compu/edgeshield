@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { memory, presets, rateLimit, slidingWindow, upstash } from "../src/index";
+import {
+  createVdfChallenge,
+  memory,
+  presets,
+  rateLimit,
+  slidingWindow,
+  upstash,
+  VDF
+} from "../src/index";
 
 describe("public exports", () => {
   it("exports core constructors", () => {
@@ -7,6 +15,8 @@ describe("public exports", () => {
     expect(typeof slidingWindow).toBe("function");
     expect(typeof memory).toBe("function");
     expect(typeof upstash).toBe("function");
+    expect(typeof createVdfChallenge).toBe("function");
+    expect(typeof VDF.compute).toBe("function");
   });
 
   it("builds preset limiters", async () => {

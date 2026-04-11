@@ -25,7 +25,7 @@ export function parseDuration(duration: DurationString): number {
     case "d":
       return value * 86_400_000;
     default:
-      throw new Error(`Unsupported duration unit: ${unit as string}`);
+      throw new Error(`Unsupported duration unit: ${unit}`);
   }
 }
 

@@ -1,24 +1,25 @@
 {
   "name": "edgeshield",
-  "version": "0.1.0",
-  "description": "Edge-native and storage-agnostic rate limiting for modern TypeScript runtimes.",
+  "version": "0.2.0",
+  "description": "Edge-native security toolkit with rate limiting, bot detection, and pluggable storage.",
   "type": "module",
   "keywords": [
     "edge",
     "rate-limit",
+    "bot-detection",
+    "cloudflare-kv",
     "nextjs",
     "middleware",
     "security",
     "typescript"
   ],
-  "homepage": "https://github.com/joseignacio/security-misc/tree/main/edgeshield",
+  "homepage": "https://github.com/jose-compu/edgeshield",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joseignacio/security-misc.git",
-    "directory": "edgeshield"
+    "url": "git+https://github.com/jose-compu/edgeshield.git"
   },
   "bugs": {
-    "url": "https://github.com/joseignacio/security-misc/issues"
+    "url": "https://github.com/jose-compu/edgeshield/issues"
   },
   "license": "MIT",
   "sideEffects": false,
@@ -33,6 +34,14 @@
     "./ratelimit": {
       "types": "./dist/ratelimit/index.d.ts",
       "import": "./dist/ratelimit/index.js"
+    },
+    "./bot": {
+      "types": "./dist/bot/index.d.ts",
+      "import": "./dist/bot/index.js"
+    },
+    "./storage/cloudflare-kv": {
+      "types": "./dist/storage/cloudflare-kv.d.ts",
+      "import": "./dist/storage/cloudflare-kv.js"
     },
     "./storage/memory": {
       "types": "./dist/storage/memory.d.ts",

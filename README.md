@@ -8,9 +8,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org/)
 
-Edge-native, storage-agnostic rate limiting for modern TypeScript runtimes.
+Edge-native security toolkit for modern TypeScript runtimes.
 
-Current release scope: `v0.1.0` includes rate limiting only. Bot detection and CSRF protection are planned roadmap modules.
+Current release scope: `v0.2.0` includes rate limiting + bot detection. CSRF protection remains planned for `v0.3.0`.
 
 ## Install
 
@@ -35,24 +35,82 @@ if (!result.success) {
 }
 ```
 
-## Features in v0.1.0
+## Bot Guard (v0.2.0)
+
+```ts
+import { botGuard } from "edgeshield/bot";
+
+const guard = botGuard({
+  mode: "block",
+  threshold: 60,
+  rules: {
+    allow: [/googlebot/i, /bingbot/i],
+    block: [/curl/i, /python-requests/i, /scrapy/i]
+  }
+});
+
+const bot = await guard.check(request);
+if (!bot.success) {
+  return new Response("Forbidden", { status: 403, headers: bot.headers });
+}
+```
+
+## Sloth VDF Challenge
+
+```ts
+import { botGuard, VDF } from "edgeshield/bot";
+
+const guard = botGuard({
+  mode: "block",
+  threshold: 40,
+  vdf: { enabled: true, steps: 20, maxAgeMs: 300000 }
+});
+
+const first = await guard.check(request);
+if (first.reason === "vdf_challenge_required") {
+  const challenge = first.headers.get("x-edgeshield-vdf-challenge");
+  const steps = Number(first.headers.get("x-edgeshield-vdf-steps"));
+  const challengeHex = challenge?.split(".")[0] ?? "";
+  const proof = await VDF.compute(challengeHex, steps);
+  // Send challenge + proof headers in the next request:
+  // x-edgeshield-vdf-challenge: <challenge>
+  // x-edgeshield-vdf-solution: <proof>
+}
+```
+
+## Cloudflare KV Adapter
+
+```ts
+import { cloudflareKV } from "edgeshield/storage/cloudflare-kv";
+import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+
+const storage = cloudflareKV({ binding: env.EDGE_KV, prefix: "edgeshield" });
+const limiter = rateLimit({
+  storage,
+  algorithm: slidingWindow(100, "15m")
+});
+```
+
+## Features in v0.2.0
 
 - Sliding and fixed window algorithms
 - Multi-tier rate limiting
-- Memory and Upstash adapters
+- Bot detection (`detect` and `block` modes)
+- Sloth VDF challenge support for suspicious bot traffic
+- Memory, Upstash, and Cloudflare KV adapters
 - Next.js middleware helper
 - TypeScript-first API
 
 ## Comparison
 
-Note: the table reflects the full product vision across roadmap versions, not only what ships in `v0.1.0`.
+Note: the table reflects the full product vision across roadmap versions.
 
 | Feature | edgeshield | @upstash/ratelimit | rate-limiter-flexible | express-rate-limit |
 |---|---|---|---|---|
 | Edge-native (no Node APIs) | Yes | Yes | No | No |
 | Storage-agnostic | Yes | Upstash only | Redis/Mongo/Postgres | Memory/Redis |
 | Rate limiting | Yes (`v0.1.0`) | Yes | Yes | Yes |
-| Bot detection | Planned (`v0.2.0`) | No | No | No |
+| Bot detection | Yes (`v0.2.0`) | No | No | No |
 | CSRF protection | Planned (`v0.3.0`) | No | No | No |
 | Tree-shakeable subpaths | Yes | No | No | No |
 | Zero dependencies | Yes | Needs @upstash/redis | 0 deps (core) | 0 deps |
@@ -79,4 +137,14 @@ npm run security:audit
 ```bash
 npm run prepublishOnly
 npm publish --access public
+```
+
+Recommended release flow:
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run build
+npm pack --dry-run
 ```
