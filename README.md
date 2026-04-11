@@ -1,5 +1,13 @@
 # EdgeShield
 
+![EdgeShield logo](./assets/logo.svg)
+
+[![npm version](https://img.shields.io/npm/v/edgeshield.svg)](https://www.npmjs.com/package/edgeshield)
+[![CI](https://github.com/jose-compu/edgeshield/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-compu/edgeshield/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/jose-compu/edgeshield)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6.svg)](https://www.typescriptlang.org/)
+
 Edge-native, storage-agnostic rate limiting for modern TypeScript runtimes.
 
 Current release scope: `v0.1.0` includes rate limiting only. Bot detection and CSRF protection are planned roadmap modules.

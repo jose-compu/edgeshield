@@ -40,4 +40,11 @@ describe("public exports", () => {
     const result = await limiter.check(new Request("https://example.com"));
     expect(result.success).toBe(true);
   });
+
+  it("builds api preset with default values", async () => {
+    const storage = memory();
+    const limiter = presets.api({ storage });
+    const result = await limiter.check(new Request("https://example.com"));
+    expect(result.success).toBe(true);
+  });
 });
