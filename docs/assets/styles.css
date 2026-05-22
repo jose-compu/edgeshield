@@ -15,7 +15,7 @@
   --green: #0f766e;
   --green-bg: #ccfbf1;
   --sidebar-width: 280px;
-  --header-height: 56px;
+  --header-height: 96px;
   --content-max: 920px;
   --radius: 8px;
   --shadow: 0 1px 3px rgba(10, 16, 32, 0.08);
@@ -119,8 +119,9 @@ pre code.hljs {
 }
 
 .site-header__brand img {
-  height: 36px;
+  height: 72px;
   width: auto;
+  max-width: min(420px, 55vw);
 }
 
 .site-header__version {
@@ -410,6 +411,14 @@ td code {
 }
 
 @media (max-width: 960px) {
+  :root {
+    --header-height: 80px;
+  }
+
+  .site-header__brand img {
+    height: 52px;
+  }
+
   .menu-toggle {
     display: inline-block;
   }
