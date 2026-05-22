@@ -106,4 +106,28 @@ describe("rateLimit", () => {
     const result = await limiter.check(new Request("https://example.com"));
     expect(result.success).toBe(true);
   });
+
+  it("uses default sliding window when no algorithm is provided", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(1_000);
+    const limiter = rateLimit({
+      storage: memory(),
+      identifier: () => "default-tier-user"
+    });
+    const result = await limiter.check(new Request("https://example.com"));
+    expect(result.success).toBe(true);
+    expect(result.meta.tier).toBeNull();
+    expect(result.headers.get("RateLimit-Limit")).toBe("60");
+  });
+
+  it("falls back to default algorithm when tiers array is empty", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(2_000);
+    const limiter = rateLimit({
+      storage: memory(),
+      tiers: [],
+      identifier: () => "empty-tiers-user"
+    });
+    const result = await limiter.check(new Request("https://example.com"));
+    expect(result.success).toBe(true);
+    expect(result.headers.get("RateLimit-Limit")).toBe("60");
+  });
 });

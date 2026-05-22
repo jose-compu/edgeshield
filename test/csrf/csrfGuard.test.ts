@@ -138,6 +138,66 @@ describe("csrfGuard", () => {
     expect(safeMethod.valid).toBe(true);
   });
 
+  it("honors exact ignorePaths matches", async () => {
+    const guard = csrfGuard({
+      secret: SECRET,
+      ignorePaths: ["/health"]
+    });
+
+    const ignored = await guard.verify(
+      new Request("https://example.com/health", { method: "POST" })
+    );
+    expect(ignored.valid).toBe(true);
+  });
+
+  it("returns success from check() for valid requests", async () => {
+    const guard = csrfGuard({ secret: SECRET });
+    const token = await guard.generate(new Request("https://example.com/form"));
+    const allowed = await guard.check(
+      new Request("https://example.com/form", {
+        method: "POST",
+        headers: {
+          cookie: `__csrf=${token}`,
+          "x-csrf-token": token
+        }
+      })
+    );
+    expect(allowed.success).toBe(true);
+    expect(allowed.reason).toBe("valid");
+  });
+
+  it("rejects origin-check requests without host header", async () => {
+    const guard = csrfGuard({
+      secret: SECRET,
+      mode: "origin-check"
+    });
+    const result = await guard.verify(
+      new Request("https://example.com/form", {
+        method: "POST"
+      })
+    );
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe("origin_mismatch");
+  });
+
+  it("rejects origin-check requests with mismatched referer", async () => {
+    const guard = csrfGuard({
+      secret: SECRET,
+      mode: "origin-check"
+    });
+    const result = await guard.verify(
+      new Request("https://example.com/form", {
+        method: "POST",
+        headers: {
+          host: "example.com",
+          referer: "https://evil.com/form"
+        }
+      })
+    );
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe("origin_mismatch");
+  });
+
   it("check() returns middleware-compatible result", async () => {
     const guard = csrfGuard({ secret: SECRET });
     const blocked = await guard.check(

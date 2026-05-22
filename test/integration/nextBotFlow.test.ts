@@ -35,4 +35,20 @@ describe("next middleware bot integration", () => {
     const result = await middleware(request);
     expect(result).toBeUndefined();
   });
+
+  it("returns HTML challenge page in challenge mode", async () => {
+    const middleware = createMiddleware(
+      botGuard({
+        mode: "challenge",
+        threshold: 5,
+        vdf: { steps: 2 }
+      })
+    );
+
+    const result = await middleware(new Request("https://example.com"));
+    expect(result?.status).toBe(403);
+    expect(result?.headers.get("content-type")).toContain("text/html");
+    const body = await result?.text();
+    expect(body).toContain("<!DOCTYPE html>");
+  });
 });

@@ -1,5 +1,5 @@
 /*
- * Sloth permutation adaptation based on:
+ * Sloth permutation adapted from dignity.js (Apache-2.0):
  * https://github.com/jose-compu/dignity.js/blob/main/src/security/sloth-vdf.js
  * https://github.com/hyperhyperspace/pulsar/blob/main/src/model/SlothVDF.ts
  */

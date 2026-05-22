@@ -1,9 +1,16 @@
+import type { StorageAdapter } from "../core/types";
+import {
+  issueChallengeValue,
+  parseEncodedChallenge,
+  renderChallengePage,
+  verifyVdfSolution,
+  type ChallengeRenderer
+} from "./challenge";
 import { fingerprintRequest } from "./fingerprint";
 import type { BotRules } from "./rules";
 import { evaluateRules } from "./rules";
-import { createVdfChallenge, VDF } from "./vdf";
 
-export type BotMode = "detect" | "block";
+export type BotMode = "detect" | "block" | "challenge";
 
 export interface BotVdfConfig {
   enabled?: boolean;
@@ -13,11 +20,17 @@ export interface BotVdfConfig {
   solutionHeader?: string;
 }
 
+export interface BotChallengeConfig {
+  renderer?: ChallengeRenderer;
+}
+
 export interface BotGuardConfig {
   mode?: BotMode;
   rules?: BotRules;
   threshold?: number;
   vdf?: BotVdfConfig;
+  challenge?: BotChallengeConfig;
+  storage?: StorageAdapter;
 }
 
 export interface BotGuardResult {
@@ -31,9 +44,14 @@ export interface BotGuardResult {
     | "blocked_suspicious"
     | "vdf_challenge_required"
     | "vdf_failed"
-    | "vdf_passed";
+    | "vdf_passed"
+    | "challenge_required"
+    | "challenge_failed"
+    | "challenge_passed";
   score: number;
   headers: Headers;
+  body?: string;
+  contentType?: string;
   meta: {
     signals: string[];
     threshold: number;
@@ -46,7 +64,8 @@ function result(
   reason: BotGuardResult["reason"],
   score: number,
   signals: string[],
-  threshold: number
+  threshold: number,
+  extra?: Pick<BotGuardResult, "body" | "contentType">
 ): BotGuardResult {
   const headers = new Headers();
   headers.set("X-EdgeShield-Bot-Score", String(score));
@@ -57,6 +76,7 @@ function result(
     reason,
     score,
     headers,
+    ...extra,
     meta: {
       signals,
       threshold
@@ -64,14 +84,28 @@ function result(
   };
 }
 
+function setVdfChallengeHeaders(
+  headers: Headers,
+  encoded: string,
+  steps: number,
+  maxAgeMs: number,
+  challengeHeader: string
+): void {
+  headers.set(challengeHeader, encoded);
+  headers.set("x-edgeshield-vdf-steps", String(steps));
+  headers.set("x-edgeshield-vdf-max-age-ms", String(maxAgeMs));
+}
+
 export function botGuard(config: BotGuardConfig = {}) {
   const mode = config.mode ?? "detect";
   const threshold = config.threshold ?? 60;
-  const vdfEnabled = config.vdf?.enabled ?? false;
+  const vdfEnabled = mode === "challenge" ? (config.vdf?.enabled ?? true) : (config.vdf?.enabled ?? false);
   const vdfSteps = config.vdf?.steps ?? 20;
   const vdfMaxAgeMs = config.vdf?.maxAgeMs ?? 5 * 60_000;
   const challengeHeader = config.vdf?.challengeHeader ?? "x-edgeshield-vdf-challenge";
   const solutionHeader = config.vdf?.solutionHeader ?? "x-edgeshield-vdf-solution";
+  const challengeRenderer = config.challenge?.renderer;
+  const storage = config.storage;
 
   if (threshold <= 0 || threshold > 100) {
     throw new Error("botGuard threshold must be between 1 and 100");
@@ -83,6 +117,135 @@ export function botGuard(config: BotGuardConfig = {}) {
     throw new Error("botGuard vdf.maxAgeMs must be positive");
   }
 
+  async function handleVdfFlow(
+    request: Request,
+    fingerprint: ReturnType<typeof fingerprintRequest>,
+    options: { htmlChallenge: boolean; challengeReason: "vdf_challenge_required" | "challenge_required" }
+  ): Promise<BotGuardResult> {
+    const encodedChallenge = request.headers.get(challengeHeader);
+    const solution = request.headers.get(solutionHeader);
+
+    if (!encodedChallenge || !solution) {
+      const issued = issueChallengeValue();
+      const response = result(
+        false,
+        403,
+        options.challengeReason,
+        fingerprint.score,
+        fingerprint.signals,
+        threshold
+      );
+      setVdfChallengeHeaders(response.headers, issued.encoded, vdfSteps, vdfMaxAgeMs, challengeHeader);
+
+      if (options.htmlChallenge) {
+        const page = renderChallengePage(
+          {
+            request,
+            challengeHex: issued.challengeHex,
+            issuedAt: issued.issuedAt,
+            steps: vdfSteps,
+            maxAgeMs: vdfMaxAgeMs,
+            score: fingerprint.score,
+            challengeHeader,
+            solutionHeader
+          },
+          challengeRenderer
+        );
+        response.body = page.body;
+        response.contentType = page.contentType;
+        response.headers.set("content-type", page.contentType);
+      }
+
+      return response;
+    }
+
+    const parsed = parseEncodedChallenge(encodedChallenge, vdfMaxAgeMs);
+    if (parsed.expired || !parsed.valid) {
+      const issued = issueChallengeValue();
+      const response = result(
+        false,
+        403,
+        options.htmlChallenge ? "challenge_failed" : "vdf_failed",
+        fingerprint.score,
+        [...fingerprint.signals, "vdf_expired_or_invalid"],
+        threshold
+      );
+      setVdfChallengeHeaders(response.headers, issued.encoded, vdfSteps, vdfMaxAgeMs, challengeHeader);
+
+      if (options.htmlChallenge) {
+        const page = renderChallengePage(
+          {
+            request,
+            challengeHex: issued.challengeHex,
+            issuedAt: issued.issuedAt,
+            steps: vdfSteps,
+            maxAgeMs: vdfMaxAgeMs,
+            score: fingerprint.score,
+            challengeHeader,
+            solutionHeader
+          },
+          challengeRenderer
+        );
+        response.body = page.body;
+        response.contentType = page.contentType;
+        response.headers.set("content-type", page.contentType);
+      }
+
+      return response;
+    }
+
+    const verified = await verifyVdfSolution(
+      parsed.challengeHex,
+      vdfSteps,
+      solution,
+      storage,
+      vdfMaxAgeMs
+    );
+
+    if (!verified) {
+      const issued = issueChallengeValue();
+      const response = result(
+        false,
+        403,
+        options.htmlChallenge ? "challenge_failed" : "vdf_failed",
+        fingerprint.score,
+        [...fingerprint.signals, "vdf_verification_failed"],
+        threshold
+      );
+      setVdfChallengeHeaders(response.headers, issued.encoded, vdfSteps, vdfMaxAgeMs, challengeHeader);
+
+      if (options.htmlChallenge) {
+        const page = renderChallengePage(
+          {
+            request,
+            challengeHex: issued.challengeHex,
+            issuedAt: issued.issuedAt,
+            steps: vdfSteps,
+            maxAgeMs: vdfMaxAgeMs,
+            score: fingerprint.score,
+            challengeHeader,
+            solutionHeader
+          },
+          challengeRenderer
+        );
+        response.body = page.body;
+        response.contentType = page.contentType;
+        response.headers.set("content-type", page.contentType);
+      }
+
+      return response;
+    }
+
+    return result(
+      true,
+      200,
+      options.htmlChallenge ? "challenge_passed" : "vdf_passed",
+      fingerprint.score,
+      [...fingerprint.signals, options.htmlChallenge ? "challenge_passed" : "vdf_passed"],
+      threshold
+    );
+  }
+
   return {
     async check(request: Request): Promise<BotGuardResult> {
       const userAgent = request.headers.get("user-agent") ?? "";
@@ -91,7 +254,7 @@ export function botGuard(config: BotGuardConfig = {}) {
         return result(true, 200, "allowlisted_ua", 0, ["allowlisted_ua"], threshold);
       }
       if (ruleDecision === "block") {
-        if (mode === "block") {
+        if (mode === "block" || mode === "challenge") {
           return result(false, 403, "blocked_ua", 100, ["blocked_ua"], threshold);
         }
         return result(true, 200, "blocked_ua", 100, ["blocked_ua"], threshold);
@@ -99,75 +262,18 @@ export function botGuard(config: BotGuardConfig = {}) {
 
       const fingerprint = fingerprintRequest(request);
       if (fingerprint.score >= threshold) {
+        if (mode === "challenge" && vdfEnabled) {
+          return handleVdfFlow(request, fingerprint, {
+            htmlChallenge: true,
+            challengeReason: "challenge_required"
+          });
+        }
         if (mode === "block") {
           if (vdfEnabled) {
-            const encodedChallenge = request.headers.get(challengeHeader);
-            const solution = request.headers.get(solutionHeader);
-
-            if (!encodedChallenge || !solution) {
-              const challenge = createVdfChallenge();
-              const issuedAt = Date.now();
-              const challengeValue = `${challenge}.${issuedAt}`;
-              const response = result(
-                false,
-                403,
-                "vdf_challenge_required",
-                fingerprint.score,
-                fingerprint.signals,
-                threshold
-              );
-              response.headers.set(challengeHeader, challengeValue);
-              response.headers.set("x-edgeshield-vdf-steps", String(vdfSteps));
-              response.headers.set("x-edgeshield-vdf-max-age-ms", String(vdfMaxAgeMs));
-              return response;
-            }
-
-            const [challengeHex, issuedAtRaw] = encodedChallenge.split(".");
-            const issuedAt = Number.parseInt(issuedAtRaw ?? "", 10);
-            const expired = !Number.isFinite(issuedAt) || Date.now() - issuedAt > vdfMaxAgeMs;
-
-            if (expired || !challengeHex) {
-              const response = result(
-                false,
-                403,
-                "vdf_failed",
-                fingerprint.score,
-                [...fingerprint.signals, "vdf_expired_or_invalid"],
-                threshold
-              );
-              response.headers.set(challengeHeader, `${createVdfChallenge()}.${Date.now()}`);
-              response.headers.set("x-edgeshield-vdf-steps", String(vdfSteps));
-              return response;
-            }
-
-            let verified = false;
-            try {
-              verified = await VDF.verify(challengeHex, vdfSteps, solution);
-            } catch {
-              verified = false;
-            }
-            if (!verified) {
-              const response = result(
-                false,
-                403,
-                "vdf_failed",
-                fingerprint.score,
-                [...fingerprint.signals, "vdf_verification_failed"],
-                threshold
-              );
-              response.headers.set(challengeHeader, `${createVdfChallenge()}.${Date.now()}`);
-              response.headers.set("x-edgeshield-vdf-steps", String(vdfSteps));
-              return response;
-            }
-
-            return result(
-              true,
-              200,
-              "vdf_passed",
-              fingerprint.score,
-              [...fingerprint.signals, "vdf_passed"],
-              threshold
-            );
+            return handleVdfFlow(request, fingerprint, {
+              htmlChallenge: false,
+              challengeReason: "vdf_challenge_required"
+            });
           }
           return result(false, 403, "blocked_suspicious", fingerprint.score, fingerprint.signals, threshold);
         }
@@ -179,5 +285,11 @@ export function botGuard(config: BotGuardConfig = {}) {
 }
 
 export { fingerprintRequest, evaluateRules };
-export type { BotRules };
-export { VDF, createVdfChallenge };
+export type { BotRules, ChallengeRenderer };
+export { VDF, createVdfChallenge } from "./vdf";
+export {
+  defaultChallengeRenderer,
+  renderChallengePage,
+  parseEncodedChallenge,
+  issueChallengeValue
+} from "./challenge";

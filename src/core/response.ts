@@ -22,13 +22,18 @@ export function buildRateLimitHeaders(input: BuildHeadersInput): Headers {
 export function blockedResponse(
   status: 429 | 403,
   reason: string,
-  headers?: Headers
+  headers?: Headers,
+  bodyOverride?: { body: string; contentType: string }
 ): Response {
+  const merged = new Headers(headers);
+  if (bodyOverride) {
+    merged.set("content-type", bodyOverride.contentType);
+    return new Response(bodyOverride.body, { status, headers: merged });
+  }
   const body = JSON.stringify({
     error: reason,
     status
   });
-  const merged = new Headers(headers);
   merged.set("content-type", "application/json; charset=utf-8");
   return new Response(body, { status, headers: merged });
 }

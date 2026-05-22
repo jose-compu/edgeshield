@@ -21,6 +21,6 @@ export default tseslint.config(
     }
   },
   {
-    ignores: ["dist/**", "coverage/**", "eslint.config.js"]
+    ignores: ["dist/**", "coverage/**", "eslint.config.js", "scripts/**", "test/deno/**"]
   }
 );

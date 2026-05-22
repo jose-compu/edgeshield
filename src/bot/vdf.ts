@@ -1,5 +1,5 @@
 /*
- * VDF wrapper adaptation based on:
+ * VDF wrapper adapted from dignity.js (Apache-2.0):
  * https://github.com/jose-compu/dignity.js/blob/main/src/security/vdf.js
  */
 import { SlothPermutation } from "./sloth-vdf";

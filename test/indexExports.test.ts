@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  createMiddleware,
   createVdfChallenge,
   csrfGuard,
+  denoKV,
   honoMiddleware,
   memory,
   presets,
   rateLimit,
+  runGuards,
+  shield,
   slidingWindow,
   upstash,
   VDF,
@@ -23,6 +27,11 @@ describe("public exports", () => {
     expect(typeof csrfGuard).toBe("function");
     expect(typeof vercelKV).toBe("function");
     expect(typeof honoMiddleware).toBe("function");
+    expect(typeof createMiddleware).toBe("function");
+    expect(typeof shield).toBe("function");
+    expect(typeof runGuards).toBe("function");
+    expect(typeof denoKV).toBe("function");
+    expect(typeof presets.apiShield).toBe("function");
   });
 
   it("builds preset limiters", async () => {
