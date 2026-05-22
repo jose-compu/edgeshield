@@ -16,7 +16,7 @@
     "security",
     "typescript"
   ],
-  "homepage": "https://github.com/jose-compu/edgeshield",
+  "homepage": "https://jose-compu.github.io/edgeshield/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jose-compu/edgeshield.git"
@@ -97,6 +97,7 @@
     "test:bun": "bun run test",
     "test:deno": "deno test --allow-read test/deno/",
     "test:coverage": "vitest run --coverage",
+    "docs:serve": "node scripts/docs-serve.mjs",
     "security:audit": "npm audit --audit-level=moderate",
     "security:static": "npm run lint && npm run typecheck",
     "prepublishOnly": "npm run clean && npm run build && npm run test:coverage"

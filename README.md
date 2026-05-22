@@ -3,6 +3,7 @@
 ![EdgeShield logo](./assets/logo.svg)
 
 [![npm version](https://img.shields.io/npm/v/edgeshield.svg)](https://www.npmjs.com/package/edgeshield)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-0ea5d9.svg)](https://jose-compu.github.io/edgeshield/)
 [![CI](https://github.com/jose-compu/edgeshield/actions/workflows/ci.yml/badge.svg)](https://github.com/jose-compu/edgeshield/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)](https://github.com/jose-compu/edgeshield)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
@@ -11,6 +12,8 @@
 Edge-native security toolkit for modern TypeScript runtimes.
 
 Current release scope: `v0.4.0` adds challenge mode, generic middleware, composite presets, Deno KV, and multi-runtime CI.
+
+**Documentation:** [jose-compu.github.io/edgeshield](https://jose-compu.github.io/edgeshield/) (source on the [`docs`](https://github.com/jose-compu/edgeshield/tree/docs/docs) branch)
 
 ## Install
 
