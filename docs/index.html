@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EdgeShield v0.4.0 — Edge-native security toolkit with rate limiting, bot detection, CSRF protection, and pluggable storage." />
+    <title>EdgeShield · Documentation</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./assets/highlight/github.min.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="./assets/highlight/github-dark.min.css" media="(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="./assets/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-header__brand" href="#overview">
+        <img src="./assets/logo.svg" alt="EdgeShield" width="200" height="61" />
+        <span class="site-header__version">v0.4.0</span>
+      </a>
+      <div class="site-header__links">
+        <a href="https://www.npmjs.com/package/edgeshield" target="_blank" rel="noopener noreferrer">npm</a>
+        <a href="https://github.com/jose-compu/edgeshield" target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href="./openapi-like.json">API JSON</a>
+      </div>
+      <button class="menu-toggle" type="button" aria-label="Toggle navigation">Menu</button>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar__group">
+          <div class="sidebar__label">Getting started</div>
+          <nav>
+            <a href="#overview">Overview</a>
+            <a href="#installation">Installation</a>
+            <a href="#quick-start">Quick start</a>
+            <a href="#runtimes">Supported runtimes</a>
+          </nav>
+        </div>
+        <div class="sidebar__group">
+          <div class="sidebar__label">Guards</div>
+          <nav>
+            <a href="#rate-limiting">Rate limiting</a>
+            <a href="#bot-detection">Bot detection</a>
+            <a href="#vdf-challenge">Sloth VDF</a>
+            <a href="#challenge-mode">Challenge mode</a>
+            <a href="#csrf">CSRF protection</a>
+          </nav>
+        </div>
+        <div class="sidebar__group">
+          <div class="sidebar__label">Integration</div>
+          <nav>
+            <a href="#middleware">Middleware</a>
+            <a href="#presets">Presets</a>
+            <a href="#storage">Storage adapters</a>
+            <a href="#custom-storage">Custom adapter</a>
+          </nav>
+        </div>
+        <div class="sidebar__group">
+          <div class="sidebar__label">Reference</div>
+          <nav>
+            <a href="#exports">Package exports</a>
+            <a href="#comparison">Comparison</a>
+            <a href="#development">Development</a>
+          </nav>
+        </div>
+      </aside>
+
+      <main class="content">
+        <div class="content__inner">
+          <section id="overview" class="section">
+            <h1 class="page-title">Documentation</h1>
+            <p class="lead">
+              <strong>EdgeShield</strong> is an edge-native security toolkit for modern TypeScript runtimes.
+              Compose rate limiting, bot detection, and CSRF guards with pluggable storage — no Node.js APIs required.
+            </p>
+
+            <div class="card-grid">
+              <article class="card">
+                <h3>Edge-first</h3>
+                <p>Web Standard <code>Request</code> / <code>Response</code>. Runs on Cloudflare Workers, Vercel Edge, Deno, Bun, and Node 20+.</p>
+              </article>
+              <article class="card">
+                <h3>Composable guards</h3>
+                <p>Chain <code>rateLimit</code>, <code>botGuard</code>, and <code>csrfGuard</code> via middleware or presets.</p>
+              </article>
+              <article class="card">
+                <h3>Storage-agnostic</h3>
+                <p>Memory, Upstash, Cloudflare KV, Vercel KV, and Deno KV adapters with a shared conformance suite in CI.</p>
+              </article>
+            </div>
+          </section>
+
+          <section id="installation" class="section">
+            <h2>Installation</h2>
+            <div class="code-block">
+              <span class="code-block__label">npm</span>
+              <pre><code class="language-bash">npm install edgeshield</code></pre>
+            </div>
+            <p>Import only the subpaths you need — the package is tree-shakeable and ships zero runtime dependencies.</p>
+          </section>
+
+          <section id="quick-start" class="section">
+            <h2>Quick start</h2>
+            <p>Rate-limit incoming requests with an in-memory store (swap in KV/Redis for production):</p>
+            <div class="code-block">
+              <span class="code-block__label">TypeScript / ESM</span>
+              <pre><code class="language-typescript">import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+import { memory } from "edgeshield/storage/memory";
+
+const limiter = rateLimit({
+  storage: memory(),
+  algorithm: slidingWindow(100, "15m")
+});
+
+const result = await limiter.check(request);
+if (!result.success) {
+  return new Response("Too Many Requests", {
+    status: 429,
+    headers: result.headers
+  });
+}</code></pre>
+            </div>
+            <div class="callout">
+              <strong>Production storage</strong>
+              Replace <code>memory()</code> with <code>cloudflareKV</code>, <code>upstash</code>, <code>vercelKV</code>, or <code>denoKV</code> so counters survive cold starts and scale across regions.
+            </div>
+          </section>
+
+          <section id="runtimes" class="section">
+            <h2>Supported runtimes</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Runtime</th>
+                    <th>CI</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Node.js 20 / 22</td>
+                    <td><span class="tag">test</span></td>
+                    <td>Lint, typecheck, coverage, build, bundle size check</td>
+                  </tr>
+                  <tr>
+                    <td>Bun</td>
+                    <td><span class="tag">bun</span></td>
+                    <td><code>bun run test</code> against source</td>
+                  </tr>
+                  <tr>
+                    <td>Deno 2.x</td>
+                    <td><span class="tag">deno</span></td>
+                    <td>Smoke tests against built <code>dist/</code></td>
+                  </tr>
+                  <tr>
+                    <td>Cloudflare Workers</td>
+                    <td>—</td>
+                    <td><code>cloudflareKV</code> adapter</td>
+                  </tr>
+                  <tr>
+                    <td>Vercel Edge</td>
+                    <td>—</td>
+                    <td><code>vercelKV</code> adapter</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="rate-limiting" class="section">
+            <h2>Rate limiting</h2>
+            <p>EdgeShield supports sliding and fixed window algorithms with configurable limits, windows, and key prefixes.</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { rateLimit, slidingWindow, fixedWindow } from "edgeshield/ratelimit";
+import { upstash } from "edgeshield/storage/upstash";
+
+const limiter = rateLimit({
+  storage: upstash({ url: env.UPSTASH_URL, token: env.UPSTASH_TOKEN }),
+  prefix: "edgeshield:api",
+  algorithm: slidingWindow(100, "15m"),
+  failOpen: true // default — allow traffic if storage throws
+});</code></pre>
+            </div>
+            <h3>Algorithms</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Function</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>slidingWindow(limit, window)</code></td>
+                    <td>Rolling window counter — smoother burst handling</td>
+                  </tr>
+                  <tr>
+                    <td><code>fixedWindow(limit, window)</code></td>
+                    <td>Discrete window buckets — simpler, lower storage cost</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Window strings accept <code>s</code>, <code>m</code>, <code>h</code>, or <code>d</code> suffixes (e.g. <code>"15m"</code>, <code>"1h"</code>).</p>
+          </section>
+
+          <section id="bot-detection" class="section">
+            <h2>Bot detection</h2>
+            <p>Score requests using fingerprint heuristics and optional allow/block rules. Three modes:</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mode</th>
+                    <th>Behaviour</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>detect</code></td>
+                    <td>Score only — never blocks; use for logging or metrics</td>
+                  </tr>
+                  <tr>
+                    <td><code>block</code></td>
+                    <td>Return 403 when score exceeds threshold; optional VDF header challenge</td>
+                  </tr>
+                  <tr>
+                    <td><code>challenge</code></td>
+                    <td>Serve HTML Sloth VDF page to suspicious browser clients</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { botGuard } from "edgeshield/bot";
+
+const guard = botGuard({
+  mode: "block",
+  threshold: 60,
+  rules: {
+    allow: [/googlebot/i, /bingbot/i],
+    block: [/curl/i, /python-requests/i, /scrapy/i]
+  }
+});
+
+const bot = await guard.check(request);
+if (!bot.success) {
+  return new Response("Forbidden", { status: 403, headers: bot.headers });
+}</code></pre>
+            </div>
+          </section>
+
+          <section id="vdf-challenge" class="section">
+            <h2>Sloth VDF challenge</h2>
+            <p>In <code>block</code> mode, suspicious clients can be asked to solve a Sloth VDF proof-of-work before retrying. The core implementation is adapted from <a href="https://github.com/jose-compu/dignity.js">dignity.js</a> (Apache-2.0).</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { botGuard, VDF } from "edgeshield/bot";
+
+const guard = botGuard({
+  mode: "block",
+  threshold: 40,
+  vdf: { enabled: true, steps: 20, maxAgeMs: 300_000 }
+});
+
+const first = await guard.check(request);
+if (first.reason === "vdf_challenge_required") {
+  const challenge = first.headers.get("x-edgeshield-vdf-challenge");
+  const steps = Number(first.headers.get("x-edgeshield-vdf-steps"));
+  const challengeHex = challenge?.split(".")[0] ?? "";
+  const proof = await VDF.compute(challengeHex, steps);
+  // Retry with:
+  // x-edgeshield-vdf-challenge: &lt;challenge&gt;
+  // x-edgeshield-vdf-solution: &lt;proof&gt;
+}</code></pre>
+            </div>
+          </section>
+
+          <section id="challenge-mode" class="section">
+            <h2>Challenge mode</h2>
+            <p>Use <code>mode: "challenge"</code> for browser traffic. Suspicious clients receive a self-contained HTML page that runs the VDF client-side and retries automatically.</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { botGuard } from "edgeshield/bot";
+import { memory } from "edgeshield/storage/memory";
+
+const guard = botGuard({
+  mode: "challenge",
+  threshold: 60,
+  storage: memory(), // optional: one-time solution anti-replay
+  vdf: { steps: 20, maxAgeMs: 300_000 },
+  challenge: {
+    renderer: (context) => `&lt;html&gt;...&lt;/html&gt;` // optional custom HTML
+  }
+});
+
+const result = await guard.check(request);
+if (!result.success && result.body) {
+  return new Response(result.body, {
+    status: 403,
+    headers: result.headers
+  });
+}</code></pre>
+            </div>
+            <div class="callout">
+              <strong>Middleware integration</strong>
+              Next.js and Hono middleware return the HTML challenge page automatically when <code>body</code> is present on the guard result.
+            </div>
+          </section>
+
+          <section id="csrf" class="section">
+            <h2>CSRF protection</h2>
+            <p>Protect state-changing routes with double-submit cookies or origin header verification.</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { csrfGuard } from "edgeshield/csrf";
+
+const csrf = csrfGuard({
+  mode: "double-submit",
+  secret: process.env.CSRF_SECRET!,
+  ttl: "1h",
+  ignorePaths: ["/api/webhooks/**"]
+});
+
+const token = await csrf.generate(request);
+const cookie = csrf.buildCookie(token);
+
+const verify = await csrf.verify(request);
+if (!verify.valid) {
+  return new Response("Forbidden", { status: 403 });
+}</code></pre>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mode</th>
+                    <th>Mechanism</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>double-submit</code></td>
+                    <td>HMAC-signed token in cookie + header/body field</td>
+                  </tr>
+                  <tr>
+                    <td><code>origin-check</code></td>
+                    <td>Validate <code>Origin</code> / <code>Referer</code> against allowed hosts</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="middleware" class="section">
+            <h2>Middleware</h2>
+            <p>Run multiple guards in sequence. The first failure short-circuits with the appropriate response.</p>
+
+            <h3>Next.js</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { createMiddleware } from "edgeshield/middleware/nextjs";
+import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+import { botGuard } from "edgeshield/bot";
+
+export default createMiddleware(
+  rateLimit({ storage, algorithm: slidingWindow(100, "15m") }),
+  botGuard({ mode: "challenge", threshold: 60 })
+);</code></pre>
+            </div>
+
+            <h3>Hono</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { Hono } from "hono";
+import { edgeshield } from "edgeshield/middleware/hono";
+import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+import { botGuard } from "edgeshield/bot";
+
+const app = new Hono();
+
+app.use(
+  "/api/*",
+  edgeshield(
+    rateLimit({ storage, algorithm: slidingWindow(100, "15m") }),
+    botGuard({ mode: "block", threshold: 60 })
+  )
+);</code></pre>
+            </div>
+
+            <h3>Generic (any framework)</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { shield } from "edgeshield/middleware/generic";
+import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+import { botGuard } from "edgeshield/bot";
+
+const protect = shield(
+  rateLimit({ storage, algorithm: slidingWindow(100, "15m") }),
+  botGuard({ mode: "block", threshold: 60 })
+);
+
+const blocked = await protect(request);
+if (blocked) return blocked;</code></pre>
+            </div>
+          </section>
+
+          <section id="presets" class="section">
+            <h2>Presets</h2>
+            <p>Opinionated defaults for common route classes. Import from <code>edgeshield/presets</code>.</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { presets } from "edgeshield/presets";
+import { memory } from "edgeshield/storage/memory";
+
+const storage = memory();
+
+// Rate-limit-only presets
+const apiLimiter = presets.api({ storage, limit: 100, window: "15m" });
+const authLimiter = presets.auth({ storage });
+const pageLimiter = presets.page({ storage });
+
+// Composite shields (rate limit + bot + optional CSRF)
+const apiShield = presets.apiShield({
+  storage,
+  csrfSecret: process.env.CSRF_SECRET
+});
+const authShield = presets.authShield({
+  storage,
+  csrfSecret: process.env.CSRF_SECRET!
+});
+const pageShield = presets.pageShield({ storage });</code></pre>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Preset</th>
+                    <th>Default limit</th>
+                    <th>Guards</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>api</code></td>
+                    <td>100 / 15m</td>
+                    <td>Rate limit</td>
+                  </tr>
+                  <tr>
+                    <td><code>auth</code></td>
+                    <td>5 / 15m</td>
+                    <td>Rate limit</td>
+                  </tr>
+                  <tr>
+                    <td><code>page</code></td>
+                    <td>300 / 1m</td>
+                    <td>Rate limit</td>
+                  </tr>
+                  <tr>
+                    <td><code>apiShield</code></td>
+                    <td>100 / 15m</td>
+                    <td>Rate limit + bot block + optional CSRF</td>
+                  </tr>
+                  <tr>
+                    <td><code>authShield</code></td>
+                    <td>5 / 15m</td>
+                    <td>Rate limit + bot block + CSRF (required secret)</td>
+                  </tr>
+                  <tr>
+                    <td><code>pageShield</code></td>
+                    <td>300 / 1m</td>
+                    <td>Rate limit + bot challenge</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="storage" class="section">
+            <h2>Storage adapters</h2>
+            <p>All adapters implement the same four-method contract and pass a shared conformance suite in CI.</p>
+
+            <h3>Cloudflare KV</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { cloudflareKV } from "edgeshield/storage/cloudflare-kv";
+
+const storage = cloudflareKV({ binding: env.EDGE_KV, prefix: "edgeshield" });</code></pre>
+            </div>
+
+            <h3>Vercel KV</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { vercelKV } from "edgeshield/storage/vercel-kv";
+
+const storage = vercelKV({ client: kv, prefix: "edgeshield" });</code></pre>
+            </div>
+
+            <h3>Deno KV</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { denoKV } from "edgeshield/storage/deno-kv";
+
+const kv = await Deno.openKv();
+const storage = denoKV({ kv, prefix: "edgeshield" });</code></pre>
+            </div>
+
+            <h3>Upstash Redis</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { upstash } from "edgeshield/storage/upstash";
+
+const storage = upstash({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!
+});</code></pre>
+            </div>
+
+            <h3>Memory (dev / tests)</h3>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { memory } from "edgeshield/storage/memory";
+
+const storage = memory();</code></pre>
+            </div>
+          </section>
+
+          <section id="custom-storage" class="section">
+            <h2>Custom storage adapter</h2>
+            <p>Implement four methods against the shared contract:</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import type { StorageAdapter } from "edgeshield";
+
+export function createMyAdapter(client: MyKVClient): StorageAdapter {
+  return {
+    get: (key) => client.get(key),
+    set: (key, value, ttlMs) => client.set(key, value, { px: ttlMs }),
+    increment: async (key, ttlMs) => {
+      const next = await client.incr(key);
+      await client.pexpire(key, ttlMs);
+      return next;
+    },
+    delete: (key) => client.del(key)
+  };
+}</code></pre>
+            </div>
+            <div class="callout callout--warn">
+              <strong>Contract notes</strong>
+              Keys are namespaced by guards via <code>prefix</code>. <code>increment</code> must return the new counter and honour TTL on first write. Expired keys should behave as missing on <code>get</code>.
+            </div>
+          </section>
+
+          <section id="exports" class="section">
+            <h2>Package exports</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Import path</th>
+                    <th>Primary exports</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>edgeshield</code></td>
+                    <td>Core types, all guards, storage helpers, presets</td>
+                  </tr>
+                  <tr>
+                    <td><code>edgeshield/ratelimit</code></td>
+                    <td><code>rateLimit</code>, <code>slidingWindow</code>, <code>fixedWindow</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>edgeshield/bot</code></td>
+                    <td><code>botGuard</code>, <code>VDF</code>, <code>createVdfChallenge</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>edgeshield/csrf</code></td>
+                    <td><code>csrfGuard</code>, <code>verifyOrigin</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>edgeshield/storage/*</code></td>
+                    <td><code>memory</code>, <code>upstash</code>, <code>cloudflareKV</code>, <code>vercelKV</code>, <code>denoKV</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>edgeshield/middleware/*</code></td>
+                    <td><code>createMiddleware</code>, <code>edgeshield</code>, <code>shield</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>edgeshield/presets</code></td>
+                    <td><code>presets.api</code>, <code>apiShield</code>, <code>authShield</code>, <code>pageShield</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Machine-readable metadata: <a href="./openapi-like.json">openapi-like.json</a></p>
+          </section>
+
+          <section id="comparison" class="section">
+            <h2>Comparison</h2>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>EdgeShield</th>
+                    <th>@upstash/ratelimit</th>
+                    <th>rate-limiter-flexible</th>
+                    <th>express-rate-limit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Edge-native</td>
+                    <td>Yes</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                  </tr>
+                  <tr>
+                    <td>Storage-agnostic</td>
+                    <td>Yes</td>
+                    <td>Upstash only</td>
+                    <td>Redis/Mongo/Postgres</td>
+                    <td>Memory/Redis</td>
+                  </tr>
+                  <tr>
+                    <td>Bot detection</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                  </tr>
+                  <tr>
+                    <td>CSRF protection</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                  </tr>
+                  <tr>
+                    <td>Tree-shakeable subpaths</td>
+                    <td>Yes</td>
+                    <td>No</td>
+                    <td>No</td>
+                    <td>No</td>
+                  </tr>
+                  <tr>
+                    <td>Zero dependencies</td>
+                    <td>Yes</td>
+                    <td>Needs @upstash/redis</td>
+                    <td>0 deps (core)</td>
+                    <td>0 deps</td>
+                  </tr>
+                  <tr>
+                    <td>Bundle size (ratelimit)</td>
+                    <td>&lt; 4 KB gzip (CI enforced)</td>
+                    <td>~8 KB</td>
+                    <td>~15 KB</td>
+                    <td>~5 KB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="development" class="section">
+            <h2>Development</h2>
+            <div class="code-block">
+              <pre><code class="language-bash"># Run tests (181+ vitest + Deno smoke)
+npm test
+
+# Coverage
+npm run test:coverage
+
+# Build
+npm run build
+
+# Bundle size budget
+npm run size:check
+
+# Serve docs locally
+npm run docs:serve
+
+# Multi-runtime
+npm run test:bun
+npm run build && npm run test:deno</code></pre>
+            </div>
+          </section>
+
+          <footer class="site-footer">
+            <p>
+              EdgeShield v0.4.0 ·
+              <a href="https://github.com/jose-compu/edgeshield/blob/main/LICENSE">MIT</a> ·
+              <a href="https://github.com/jose-compu/edgeshield">GitHub</a> ·
+              <a href="https://www.npmjs.com/package/edgeshield">npm</a>
+            </p>
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <script src="./assets/highlight/highlight.min.js"></script>
+    <script src="./assets/docs.js"></script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+<svg width="720" height="220" viewBox="0 0 720 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="220" rx="24" fill="#0A1020"/>
+  <path d="M100 50L150 72V116C150 151 128 183 100 196C72 183 50 151 50 116V72L100 50Z" fill="#33D1FF"/>
+  <path d="M100 78L126 89V116C126 136 113 155 100 163C87 155 74 136 74 116V89L100 78Z" fill="#0A1020"/>
+  <text x="190" y="132" fill="#EAF8FF" font-size="72" font-weight="700" font-family="Inter, Avenir Next, Segoe UI, Arial, sans-serif">EdgeShield</text>
+  <text x="190" y="170" fill="#8EB0C6" font-size="26" font-family="Inter, Avenir Next, Segoe UI, Arial, sans-serif">Edge-native request defense</text>
+</svg>

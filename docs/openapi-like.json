@@ -1,0 +1,105 @@
+{
+  "name": "edgeshield",
+  "version": "0.4.0",
+  "description": "Edge-native security toolkit with rate limiting, bot detection, CSRF protection, and pluggable storage.",
+  "license": "MIT",
+  "repository": "https://github.com/jose-compu/edgeshield",
+  "exports": [
+    {
+      "path": "edgeshield",
+      "description": "Core types and re-exports",
+      "symbols": ["StorageAdapter", "rateLimit", "botGuard", "csrfGuard", "presets"]
+    },
+    {
+      "path": "edgeshield/ratelimit",
+      "description": "Rate limiting guards",
+      "symbols": ["rateLimit", "slidingWindow", "fixedWindow"]
+    },
+    {
+      "path": "edgeshield/bot",
+      "description": "Bot detection and Sloth VDF challenges",
+      "symbols": ["botGuard", "VDF", "createVdfChallenge", "defaultChallengeRenderer", "fingerprintRequest"]
+    },
+    {
+      "path": "edgeshield/csrf",
+      "description": "CSRF protection",
+      "symbols": ["csrfGuard", "verifyOrigin"]
+    },
+    {
+      "path": "edgeshield/storage/memory",
+      "description": "In-memory storage adapter",
+      "symbols": ["memory"]
+    },
+    {
+      "path": "edgeshield/storage/upstash",
+      "description": "Upstash Redis adapter",
+      "symbols": ["upstash"]
+    },
+    {
+      "path": "edgeshield/storage/cloudflare-kv",
+      "description": "Cloudflare Workers KV adapter",
+      "symbols": ["cloudflareKV"]
+    },
+    {
+      "path": "edgeshield/storage/vercel-kv",
+      "description": "Vercel KV adapter",
+      "symbols": ["vercelKV"]
+    },
+    {
+      "path": "edgeshield/storage/deno-kv",
+      "description": "Deno KV adapter",
+      "symbols": ["denoKV"]
+    },
+    {
+      "path": "edgeshield/middleware/nextjs",
+      "description": "Next.js middleware helper",
+      "symbols": ["createMiddleware"]
+    },
+    {
+      "path": "edgeshield/middleware/hono",
+      "description": "Hono middleware helper",
+      "symbols": ["edgeshield"]
+    },
+    {
+      "path": "edgeshield/middleware/generic",
+      "description": "Framework-agnostic guard runner",
+      "symbols": ["shield", "runGuards"]
+    },
+    {
+      "path": "edgeshield/presets",
+      "description": "Composite configuration presets",
+      "symbols": ["presets", "apiShield", "authShield", "pageShield", "api", "auth", "page"]
+    }
+  ],
+  "guards": [
+    {
+      "name": "rateLimit",
+      "method": "check(request)",
+      "returns": "RateLimitResult",
+      "blockedStatus": 429
+    },
+    {
+      "name": "botGuard",
+      "method": "check(request)",
+      "returns": "BotGuardResult",
+      "blockedStatus": 403,
+      "modes": ["detect", "block", "challenge"]
+    },
+    {
+      "name": "csrfGuard",
+      "method": "verify(request)",
+      "returns": "CsrfVerifyResult",
+      "blockedStatus": 403,
+      "modes": ["double-submit", "origin-check"]
+    }
+  ],
+  "storageContract": {
+    "methods": ["get", "set", "increment", "delete"],
+    "notes": [
+      "Keys are namespaced via guard prefix",
+      "TTL values are in milliseconds",
+      "increment must return the new counter and honour TTL on first write",
+      "Rate limiting fail-opens by default when storage throws"
+    ]
+  }
+}
