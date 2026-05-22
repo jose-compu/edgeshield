@@ -35,4 +35,20 @@ describe("nextjs middleware", () => {
       status: 403
     });
   });
+
+  it("returns HTML challenge body when guard provides one", async () => {
+    const middleware = createMiddleware({
+      check: async () => ({
+        success: false,
+        status: 403,
+        reason: "challenge_required",
+        body: "<html>verify</html>",
+        contentType: "text/html; charset=utf-8"
+      })
+    });
+    const result = await middleware(new Request("https://example.com"));
+    expect(result?.status).toBe(403);
+    expect(result?.headers.get("content-type")).toContain("text/html");
+    await expect(result?.text()).resolves.toBe("<html>verify</html>");
+  });
 });

@@ -1,15 +1,6 @@
-import { blockedResponse } from "../core/response";
+import { runGuards, toBlockedResponse, type GuardLike } from "./guard-runner";
 
-export interface HonoGuardLikeResult {
-  success: boolean;
-  status: 200 | 403 | 429;
-  reason: string;
-  headers?: Headers;
-}
-
-export interface HonoGuardLike {
-  check(request: Request): Promise<HonoGuardLikeResult>;
-}
+export type { GuardLike, GuardLikeResult } from "./guard-runner";
 
 interface HonoLikeContext {
   req: { raw: Request };
@@ -18,19 +9,17 @@ interface HonoLikeContext {
 
 type HonoNext = () => Promise<void>;
 
-export function edgeshield(...guards: HonoGuardLike[]) {
+export function edgeshield(...guards: GuardLike[]) {
   return async function edgeshieldHonoMiddleware(
     context: HonoLikeContext,
     next: HonoNext
   ): Promise<void | Response> {
-    for (const guard of guards) {
-      const result = await guard.check(context.req.raw);
-      if (!result.success) {
-        const status = result.status === 403 ? 403 : 429;
-        const blocked = blockedResponse(status, result.reason, result.headers);
-        return context.newResponse(blocked.body, blocked.status, blocked.headers);
-      }
+    const blocked = await runGuards(context.req.raw, guards);
+    if (blocked) {
+      return context.newResponse(blocked.body, blocked.status, blocked.headers);
     }
     await next();
   };
 }
+
+export { toBlockedResponse };

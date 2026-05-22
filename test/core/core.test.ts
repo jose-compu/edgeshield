@@ -39,6 +39,16 @@ describe("core identity and response helpers", () => {
     });
   });
 
+  it("builds blocked response with custom HTML body", async () => {
+    const response = blockedResponse(403, "challenge_required", new Headers(), {
+      body: "<html>challenge</html>",
+      contentType: "text/html; charset=utf-8"
+    });
+    expect(response.status).toBe(403);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    await expect(response.text()).resolves.toBe("<html>challenge</html>");
+  });
+
   it("returns anonymous default identifier without ip", () => {
     const request = new Request("https://example.com");
     expect(defaultIdentifier(request)).toBe("anonymous");

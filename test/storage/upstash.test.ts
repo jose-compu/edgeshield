@@ -10,6 +10,11 @@ describe("upstash adapter", () => {
     expect(() => upstash({ url: "http://invalid", token: "short" })).toThrow();
     expect(() => upstash({ url: "https://example.com", token: "short" })).toThrow();
     expect(() => upstash({ url: "https://example.com", token: "valid-token", timeoutMs: 0 })).toThrow();
+    expect(() => upstash({ url: "not-a-url", token: "valid-token" })).toThrow("Invalid Upstash URL");
+    expect(() => upstash({ url: "http://example.com", token: "valid-token" })).toThrow("must use https");
+    expect(() => upstash({ url: "https://example.com", token: "valid-token", timeoutMs: 40_000 })).toThrow(
+      "timeoutMs must be between 1 and 30000"
+    );
   });
 
   it("runs successful commands", async () => {

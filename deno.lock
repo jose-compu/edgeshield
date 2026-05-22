@@ -1,0 +1,33 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@std/assert@1": "1.0.19",
+    "jsr:@std/internal@^1.0.12": "1.0.13"
+  },
+  "jsr": {
+    "@std/assert@1.0.19": {
+      "integrity": "eaada96ee120cb980bc47e040f82814d786fe8162ecc53c91d8df60b8755991e",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
+    },
+    "@std/internal@1.0.13": {
+      "integrity": "2f9546691d4ac2d32859c82dff284aaeac980ddeca38430d07941e7e288725c0"
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@eslint/js@^9.24.0",
+        "npm:@types/node@^22.14.1",
+        "npm:@vitest/coverage-v8@^3.1.1",
+        "npm:eslint@^9.24.0",
+        "npm:globals@16",
+        "npm:tsup@^8.4.0",
+        "npm:typescript-eslint@^8.29.0",
+        "npm:typescript@^5.8.3",
+        "npm:vitest@^3.1.1"
+      ]
+    }
+  }
+}

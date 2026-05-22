@@ -62,6 +62,10 @@
       "types": "./dist/storage/upstash.d.ts",
       "import": "./dist/storage/upstash.js"
     },
+    "./storage/deno-kv": {
+      "types": "./dist/storage/deno-kv.d.ts",
+      "import": "./dist/storage/deno-kv.js"
+    },
     "./middleware/nextjs": {
       "types": "./dist/middleware/nextjs.d.ts",
       "import": "./dist/middleware/nextjs.js"
@@ -69,6 +73,14 @@
     "./middleware/hono": {
       "types": "./dist/middleware/hono.d.ts",
       "import": "./dist/middleware/hono.js"
+    },
+    "./middleware/generic": {
+      "types": "./dist/middleware/generic.d.ts",
+      "import": "./dist/middleware/generic.js"
+    },
+    "./presets": {
+      "types": "./dist/presets/index.d.ts",
+      "import": "./dist/presets/index.js"
     }
   },
   "files": [
@@ -77,10 +89,13 @@
   ],
   "scripts": {
     "build": "tsup",
+    "size:check": "node scripts/check-bundle-size.mjs",
     "clean": "rm -rf dist coverage",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:bun": "bun run test",
+    "test:deno": "deno test --allow-read test/deno/",
     "test:coverage": "vitest run --coverage",
     "security:audit": "npm audit --audit-level=moderate",
     "security:static": "npm run lint && npm run typecheck",

@@ -20,4 +20,9 @@ describe("bot rules", () => {
     });
     expect(decision).toBe("block");
   });
+
+  it("returns neutral when rules exist but nothing matches", () => {
+    expect(evaluateRules("Mozilla/5.0", { allow: [/googlebot/i], block: [/curl/i] })).toBe("neutral");
+    expect(evaluateRules("Mozilla/5.0", { allow: [], block: [] })).toBe("neutral");
+  });
 });
