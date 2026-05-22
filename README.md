@@ -10,7 +10,7 @@
 
 Edge-native security toolkit for modern TypeScript runtimes.
 
-Current release scope: `v0.3.0` includes rate limiting + bot detection + CSRF protection.
+Current release scope: `v0.4.0` adds challenge mode, generic middleware, composite presets, Deno KV, and multi-runtime CI.
 
 ## Install
 
@@ -274,7 +274,7 @@ npm run test:bun
 npm run build && npm run test:deno
 ```
 
-## Features in v0.3.0
+## Features in v0.4.0
 
 - Sliding and fixed window algorithms
 - Multi-tier rate limiting
@@ -307,7 +307,7 @@ Note: the table reflects the full product vision across roadmap versions.
 - `v0.1.0` — Core rate limiting + memory + upstash adapters + Next.js middleware
 - `v0.2.0` — Bot detection module + Cloudflare KV adapter
 - `v0.3.0` — CSRF module + Hono middleware + Vercel KV adapter
-- `v0.4.0` — Presets, Deno KV adapter, analytics hooks
+- `v0.4.0` — Challenge mode, generic middleware, presets, Deno KV adapter, conformance suite, multi-runtime CI
 - `v1.0.0` — Stable API, full docs site, all adapters battle-tested
 
 ## Build And Test
@@ -329,7 +329,7 @@ npm run typecheck
 npm run test:coverage
 npm run build
 npm run size:check
-npm version patch
+npm version minor
 git push --follow-tags
 ```
 

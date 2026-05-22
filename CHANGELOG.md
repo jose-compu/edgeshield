@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-22
+
 ### Added
 
 - Bot challenge mode with default HTML renderer and custom `ChallengeRenderer` override ([#6](https://github.com/jose-compu/edgeshield/issues/6))
@@ -45,7 +47,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Memory and Upstash storage adapters
 - Next.js middleware helper
 
-[Unreleased]: https://github.com/jose-compu/edgeshield/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/jose-compu/edgeshield/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/jose-compu/edgeshield/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jose-compu/edgeshield/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jose-compu/edgeshield/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/jose-compu/edgeshield/releases/tag/v0.1.0

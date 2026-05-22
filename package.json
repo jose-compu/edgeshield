@@ -1,6 +1,6 @@
 {
   "name": "edgeshield",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Edge-native security toolkit with rate limiting, bot detection, and pluggable storage.",
   "type": "module",
   "keywords": [
