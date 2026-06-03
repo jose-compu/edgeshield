@@ -342,3 +342,15 @@ Manual publish:
 npm run prepublishOnly
 npm publish --access public
 ```
+
+## Good First Issues
+
+New to EdgeShield? We welcome first-time contributors! A good first contribution here usually involves:
+
+- **Tests**: Adding unit test coverage for edge cases (Vitest)
+- **Documentation**: Improving README, inline comments, or JSDoc annotations
+- **Examples**: Creating small runnable demo apps under `examples/`
+
+Browse all [good first issues](https://github.com/jose-compu/edgeshield/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) to find something to work on.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines.
