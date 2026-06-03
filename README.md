@@ -342,3 +342,10 @@ Manual publish:
 npm run prepublishOnly
 npm publish --access public
 ```
+
+## Community
+
+- [Contributing Guidelines](./CONTRIBUTING.md) — how to set up the dev environment and submit PRs
+- [Code of Conduct](./CODE_OF_CONDUCT.md) — our community standards
+- [Security Policy](./SECURITY.md) — how to report vulnerabilities
+- [Good First Issues](https://github.com/jose-compu/edgeshield/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) — starter tasks for new contributors
