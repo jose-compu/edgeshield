@@ -342,3 +342,13 @@ Manual publish:
 npm run prepublishOnly
 npm publish --access public
 ```
+
+## Adopters
+
+Using EdgeShield in production? We'd love to hear from you! To add your project to this list, open a PR adding a row to the table below:
+
+| Project | URL | Use case |
+|---------|-----|----------|
+| <!-- Add your project here --> | | |
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to submit your entry.
