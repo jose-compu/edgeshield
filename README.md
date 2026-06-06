@@ -21,6 +21,10 @@ Current release scope: `v0.4.0` adds challenge mode, generic middleware, composi
 npm install edgeshield
 ```
 
+## Good First Issues
+
+Looking for a starter task? Browse the [good first issues](https://github.com/jose-compu/edgeshield/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) for small, focused contributions such as tests, docs improvements, and compact examples.
+
 ## Quick Start
 
 ```ts
