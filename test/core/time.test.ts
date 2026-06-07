@@ -22,4 +22,11 @@ describe("time helpers", () => {
     expect(unixSeconds(1_000)).toBe(1);
     expect(unixSeconds(1_500)).toBe(2);
   });
+
+  it("handles unixSeconds rounding boundary cases", () => {
+    expect(unixSeconds(0)).toBe(0);        // zero
+    expect(unixSeconds(999)).toBe(1);       // ceil from <1s to 1s
+    expect(unixSeconds(1_000)).toBe(1);     // exact 1s
+    expect(unixSeconds(1_500)).toBe(2);     // already tested, included for completeness
+  });
 });
