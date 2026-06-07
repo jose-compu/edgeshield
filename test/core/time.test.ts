@@ -11,9 +11,18 @@ describe("time helpers", () => {
   });
 
   it("rejects invalid duration strings", () => {
-    expect(() => parseDuration("10x" as DurationString)).toThrow("Invalid duration format");
-    expect(() => parseDuration("0s" as DurationString)).toThrow("Duration must be positive");
+    expect(() => parseDuration("15" as DurationString)).toThrow("Invalid duration format");
+    expect(() => parseDuration("m15" as DurationString)).toThrow("Invalid duration format");
+    expect(() => parseDuration("15x" as DurationString)).toThrow("Invalid duration format");
     expect(() => parseDuration("" as DurationString)).toThrow("Invalid duration format");
+  });
+
+  it("rejects non-positive durations", () => {
+    expect(() => parseDuration("0s" as DurationString)).toThrow("Duration must be positive");
+  });
+
+  it("parses large day durations", () => {
+    expect(parseDuration("999d")).toBe(86_313_600_000);
   });
 
   it("converts milliseconds to unix seconds", () => {
