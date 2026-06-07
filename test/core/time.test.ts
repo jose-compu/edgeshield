@@ -17,7 +17,9 @@ describe("time helpers", () => {
   });
 
   it("converts milliseconds to unix seconds", () => {
-    expect(unixSeconds(1_500)).toBe(2);
     expect(unixSeconds(0)).toBe(0);
+    expect(unixSeconds(999)).toBe(1);
+    expect(unixSeconds(1_000)).toBe(1);
+    expect(unixSeconds(1_500)).toBe(2);
   });
 });
