@@ -24,6 +24,9 @@
   "bugs": {
     "url": "https://github.com/jose-compu/edgeshield/issues"
   },
+  "security": {
+    "url": "https://github.com/jose-compu/edgeshield/blob/main/SECURITY.md"
+  },
   "license": "MIT",
   "sideEffects": false,
   "engines": {
