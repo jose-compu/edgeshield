@@ -2,7 +2,9 @@ import { defaultIdentifier, sanitizeIdentifier } from "../core/identity";
 import { buildRateLimitHeaders } from "../core/response";
 import type { RateLimitConfig, RateLimitResult, RateLimiter, RateLimitTier } from "../core/types";
 import { fixedWindow } from "./fixed-window";
+import { leakyBucket } from "./leaky-bucket";
 import { slidingWindow } from "./sliding-window";
+import { tokenBucket } from "./token-bucket";
 
 function resolveTiers(config: RateLimitConfig): RateLimitTier[] {
   if (config.tiers && config.tiers.length > 0) {
@@ -86,4 +88,4 @@ export function rateLimit(config: RateLimitConfig): RateLimiter {
   };
 }
 
-export { fixedWindow, slidingWindow };
+export { fixedWindow, leakyBucket, slidingWindow, tokenBucket };

@@ -7,6 +7,8 @@ export interface StorageAdapter {
 
 export type DurationString = `${number}${"s" | "m" | "h" | "d"}`;
 
+export type RateString = `${number}/${"s" | "m" | "h"}`;
+
 export type IdentifierFn = (request: Request) => string | Promise<string>;
 
 export interface AlgorithmState {
@@ -16,7 +18,7 @@ export interface AlgorithmState {
 }
 
 export interface RateLimitAlgorithm {
-  kind: "sliding-window" | "fixed-window";
+  kind: "sliding-window" | "fixed-window" | "token-bucket" | "leaky-bucket";
   limit: number;
   windowMs: number;
   evaluate(storage: StorageAdapter, key: string, nowMs: number): Promise<AlgorithmState>;

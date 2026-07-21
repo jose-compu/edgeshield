@@ -11,6 +11,8 @@ import {
   runGuards,
   shield,
   slidingWindow,
+  tokenBucket,
+  leakyBucket,
   upstash,
   VDF,
   vercelKV
@@ -20,6 +22,8 @@ describe("public exports", () => {
   it("exports core constructors", () => {
     expect(typeof rateLimit).toBe("function");
     expect(typeof slidingWindow).toBe("function");
+    expect(typeof tokenBucket).toBe("function");
+    expect(typeof leakyBucket).toBe("function");
     expect(typeof memory).toBe("function");
     expect(typeof upstash).toBe("function");
     expect(typeof createVdfChallenge).toBe("function");

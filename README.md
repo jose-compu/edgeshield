@@ -11,7 +11,7 @@
 
 Edge-native security toolkit for modern TypeScript runtimes.
 
-Current release scope: `v0.4.0` adds challenge mode, generic middleware, composite presets, Deno KV, and multi-runtime CI.
+Current release scope: `v0.5.0` adds token bucket and leaky bucket rate-limit algorithms.
 
 **Documentation:** [jose-compu.github.io/edgeshield](https://jose-compu.github.io/edgeshield/) (source on the [`docs`](https://github.com/jose-compu/edgeshield/tree/docs/docs) branch)
 
@@ -37,6 +37,36 @@ if (!result.success) {
   return new Response("Too Many Requests", { status: 429, headers: result.headers });
 }
 ```
+
+## Rate Limit Algorithms
+
+```ts
+import {
+  rateLimit,
+  slidingWindow,
+  fixedWindow,
+  tokenBucket,
+  leakyBucket
+} from "edgeshield/ratelimit";
+import { memory } from "edgeshield/storage/memory";
+
+const storage = memory();
+
+// Window counters — duration strings: "10s" | "5m" | "1h" | "1d"
+rateLimit({ storage, algorithm: slidingWindow(100, "15m") });
+rateLimit({ storage, algorithm: fixedWindow(1000, "1h") });
+
+// Bucket algorithms — rate strings: "1/s" | "10/m" | "100/h"
+rateLimit({ storage, algorithm: tokenBucket(10, "1/s") });
+rateLimit({ storage, algorithm: leakyBucket(50, "10/m") });
+```
+
+| Algorithm | Signature | Best for |
+|---|---|---|
+| `slidingWindow` | `(limit, window)` | Smooth burst control over a rolling window |
+| `fixedWindow` | `(limit, window)` | Simple counters with lower storage cost |
+| `tokenBucket` | `(capacity, refillRate)` | Sustained rate with short bursts up to capacity |
+| `leakyBucket` | `(capacity, drainRate)` | Smooth outbound pacing; rejects when the queue is full |
 
 ## Bot Guard (v0.2.0)
 
@@ -277,9 +307,9 @@ npm run test:bun
 npm run build && npm run test:deno
 ```
 
-## Features in v0.4.0
+## Features in v0.5.0
 
-- Sliding and fixed window algorithms
+- Sliding window, fixed window, token bucket, and leaky bucket algorithms
 - Multi-tier rate limiting
 - Bot detection (`detect`, `block`, and `challenge` modes)
 - Sloth VDF challenge support for suspicious bot traffic
@@ -311,6 +341,7 @@ Note: the table reflects the full product vision across roadmap versions.
 - `v0.2.0` — Bot detection module + Cloudflare KV adapter
 - `v0.3.0` — CSRF module + Hono middleware + Vercel KV adapter
 - `v0.4.0` — Challenge mode, generic middleware, presets, Deno KV adapter, conformance suite, multi-runtime CI
+- `v0.5.0` — Token bucket and leaky bucket algorithms
 - `v1.0.0` — Stable API, full docs site, all adapters battle-tested
 
 ## Build And Test
