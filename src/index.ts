@@ -3,9 +3,11 @@ export type {
   RateLimiter,
   RateLimitConfig,
   RateLimitResult,
-  RateLimitAlgorithm
+  RateLimitAlgorithm,
+  RateString,
+  DurationString
 } from "./core/types";
-export { rateLimit, fixedWindow, slidingWindow } from "./ratelimit";
+export { rateLimit, fixedWindow, slidingWindow, tokenBucket, leakyBucket } from "./ratelimit";
 export { botGuard, fingerprintRequest, evaluateRules, VDF, createVdfChallenge, defaultChallengeRenderer } from "./bot";
 export type {
   BotRules,

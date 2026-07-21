@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-21
+
+### Added
+
+- Token bucket rate-limit algorithm (`tokenBucket(capacity, refillRate)`) ([#5](https://github.com/jose-compu/edgeshield/issues/5))
+- Leaky bucket rate-limit algorithm (`leakyBucket(capacity, drainRate)`) ([#5](https://github.com/jose-compu/edgeshield/issues/5))
+- Rate string parser for `"1/s"`, `"10/m"`, and `"100/h"` formats
+
 ## [0.4.0] - 2026-05-22
 
 ### Added
@@ -47,7 +55,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Memory and Upstash storage adapters
 - Next.js middleware helper
 
-[Unreleased]: https://github.com/jose-compu/edgeshield/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/jose-compu/edgeshield/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/jose-compu/edgeshield/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/jose-compu/edgeshield/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/jose-compu/edgeshield/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/jose-compu/edgeshield/compare/v0.1.0...v0.2.0

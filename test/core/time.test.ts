@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseDuration, unixSeconds } from "../../src/core/time";
-import type { DurationString } from "../../src/core/types";
+import { parseDuration, parseRate, unixSeconds } from "../../src/core/time";
+import type { DurationString, RateString } from "../../src/core/types";
 
 describe("time helpers", () => {
   it("parses supported duration units", () => {
@@ -14,6 +14,18 @@ describe("time helpers", () => {
     expect(() => parseDuration("10x" as DurationString)).toThrow("Invalid duration format");
     expect(() => parseDuration("0s" as DurationString)).toThrow("Duration must be positive");
     expect(() => parseDuration("" as DurationString)).toThrow("Invalid duration format");
+  });
+
+  it("parses supported rate units", () => {
+    expect(parseRate("1/s")).toBeCloseTo(0.001);
+    expect(parseRate("60/m")).toBeCloseTo(0.001);
+    expect(parseRate("3600/h")).toBeCloseTo(0.001);
+  });
+
+  it("rejects invalid rate strings", () => {
+    expect(() => parseRate("1/d" as RateString)).toThrow("Invalid rate format");
+    expect(() => parseRate("0/s" as RateString)).toThrow("Rate must be positive");
+    expect(() => parseRate("1s" as RateString)).toThrow("Invalid rate format");
   });
 
   it("converts milliseconds to unix seconds", () => {

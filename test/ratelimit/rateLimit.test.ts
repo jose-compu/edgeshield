@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fixedWindow, rateLimit, slidingWindow } from "../../src/ratelimit";
+import { fixedWindow, leakyBucket, rateLimit, slidingWindow, tokenBucket } from "../../src/ratelimit";
 import { memory } from "../../src/storage/memory";
 
 describe("rateLimit", () => {
@@ -129,5 +129,36 @@ describe("rateLimit", () => {
     const result = await limiter.check(new Request("https://example.com"));
     expect(result.success).toBe(true);
     expect(result.headers.get("RateLimit-Limit")).toBe("60");
+  });
+
+  it("supports token bucket algorithm end-to-end", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(5_000);
+    const limiter = rateLimit({
+      storage: memory(),
+      algorithm: tokenBucket(1, "1/s"),
+      identifier: () => "token-user"
+    });
+
+    const first = await limiter.check(new Request("https://example.com"));
+    const second = await limiter.check(new Request("https://example.com"));
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(false);
+    expect(second.status).toBe(429);
+    expect(second.headers.get("RateLimit-Limit")).toBe("1");
+  });
+
+  it("supports leaky bucket algorithm end-to-end", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(5_000);
+    const limiter = rateLimit({
+      storage: memory(),
+      algorithm: leakyBucket(1, "1/s"),
+      identifier: () => "leaky-user"
+    });
+
+    const first = await limiter.check(new Request("https://example.com"));
+    const second = await limiter.check(new Request("https://example.com"));
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(false);
+    expect(second.reason).toBe("rate_limited");
   });
 });

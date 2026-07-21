@@ -392,7 +392,8 @@ const pageShield = presets.page({ storage, mode: "detect" });
 **v0.1.0** — Core rate limiting + memory + upstash adapters + Next.js middleware
 **v0.2.0** — Bot detection module + Cloudflare KV adapter
 **v0.3.0** — CSRF module + Hono middleware + Vercel KV adapter
-**v0.4.0** — Presets, Deno KV adapter, analytics hooks
+**v0.4.0** — Presets, Deno KV adapter, challenge mode, multi-runtime CI
+**v0.5.0** — Token bucket and leaky bucket algorithms
 **v1.0.0** — Stable API, full docs site, all adapters battle-tested
 
 ---
