@@ -11,8 +11,9 @@ describe("time helpers", () => {
   });
 
   it("rejects invalid duration strings", () => {
-    expect(() => parseDuration("10x" as DurationString)).toThrow("Invalid duration format");
-    expect(() => parseDuration("0s" as DurationString)).toThrow("Duration must be positive");
+    expect(() => parseDuration("15" as DurationString)).toThrow("Invalid duration format");
+    expect(() => parseDuration("m15" as DurationString)).toThrow("Invalid duration format");
+    expect(() => parseDuration("15x" as DurationString)).toThrow("Invalid duration format");
     expect(() => parseDuration("" as DurationString)).toThrow("Invalid duration format");
   });
 
@@ -28,8 +29,25 @@ describe("time helpers", () => {
     expect(() => parseRate("1s" as RateString)).toThrow("Invalid rate format");
   });
 
+  it("rejects non-positive durations", () => {
+    expect(() => parseDuration("0s" as DurationString)).toThrow("Duration must be positive");
+  });
+
+  it("parses large day durations", () => {
+    expect(parseDuration("999d")).toBe(86_313_600_000);
+  });
+
   it("converts milliseconds to unix seconds", () => {
-    expect(unixSeconds(1_500)).toBe(2);
     expect(unixSeconds(0)).toBe(0);
+    expect(unixSeconds(999)).toBe(1);
+    expect(unixSeconds(1_000)).toBe(1);
+    expect(unixSeconds(1_500)).toBe(2);
+  });
+
+  it("handles unixSeconds rounding boundary cases", () => {
+    expect(unixSeconds(0)).toBe(0);        // zero
+    expect(unixSeconds(999)).toBe(1);       // ceil from <1s to 1s
+    expect(unixSeconds(1_000)).toBe(1);     // exact 1s
+    expect(unixSeconds(1_500)).toBe(2);     // already tested, included for completeness
   });
 });
