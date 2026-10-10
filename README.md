@@ -11,7 +11,7 @@
 
 Edge-native security toolkit for modern TypeScript runtimes.
 
-Current release scope: `v0.5.0` adds token bucket and leaky bucket rate-limit algorithms.
+Current release scope: `v0.6.0` adds `retryAfterSeconds` and a public `blockedResponse` helper.
 
 **Documentation:** [jose-compu.github.io/edgeshield](https://jose-compu.github.io/edgeshield/) (source on the [`docs`](https://github.com/jose-compu/edgeshield/tree/docs/docs) branch)
 
@@ -24,7 +24,7 @@ npm install edgeshield
 ## Quick Start
 
 ```ts
-import { rateLimit, slidingWindow } from "edgeshield/ratelimit";
+import { rateLimit, slidingWindow, blockedResponse } from "edgeshield/ratelimit";
 import { memory } from "edgeshield/storage/memory";
 
 const limiter = rateLimit({
@@ -34,7 +34,7 @@ const limiter = rateLimit({
 
 const result = await limiter.check(request);
 if (!result.success) {
-  return new Response("Too Many Requests", { status: 429, headers: result.headers });
+  return blockedResponse(429, "rate_limited", result.headers);
 }
 ```
 
@@ -307,7 +307,13 @@ npm run test:bun
 npm run build && npm run test:deno
 ```
 
-## Features in v0.5.0
+## Troubleshooting
+
+- **Counters reset between requests:** memory storage is per-isolate. Use Upstash, Cloudflare KV, Vercel KV, or Deno KV when instances do not share RAM.
+- **Cold starts / multiple isolates:** in-process counters do not converge. Prefer durable storage for production limits.
+- **Clock skew:** window and bucket algorithms use the runtime clock. Large skew between edge regions can shorten or lengthen windows.
+
+## Features in v0.6.0
 
 - Sliding window, fixed window, token bucket, and leaky bucket algorithms
 - Multi-tier rate limiting
@@ -319,6 +325,7 @@ npm run build && npm run test:deno
 - Configuration presets and composite shields
 - Bundle size budget enforced in CI (`npm run size:check`)
 - TypeScript-first API
+- `retryAfterSeconds(result)` and `blockedResponse()` for 429 handling
 
 ## Comparison
 
