@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `retryAfterSeconds(result)` helper for 429 handling
 - Public export of `blockedResponse` for JSON 429/403 bodies
 
+### Changed
+
+- `npm run security:audit` audits production dependencies only (`--omit=dev`)
+
 ## [0.5.0] - 2026-07-21
 
 ### Added

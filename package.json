@@ -101,7 +101,7 @@
     "test:deno": "deno test --allow-read test/deno/",
     "test:coverage": "vitest run --coverage",
     "docs:serve": "node scripts/docs-serve.mjs",
-    "security:audit": "npm audit --audit-level=moderate",
+    "security:audit": "npm audit --omit=dev --audit-level=moderate",
     "security:static": "npm run lint && npm run typecheck",
     "prepublishOnly": "npm run clean && npm run build && npm run test:coverage"
   },
