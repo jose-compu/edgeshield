@@ -1,4 +1,5 @@
 import { unixSeconds } from "./time";
+import type { RateLimitResult } from "./types";
 
 interface BuildHeadersInput {
   limit: number;
@@ -17,6 +18,16 @@ export function buildRateLimitHeaders(input: BuildHeadersInput): Headers {
     headers.set("Retry-After", String(resetSeconds));
   }
   return headers;
+}
+
+/** Seconds until `result.meta.reset`, preferring the `Retry-After` header when present. */
+export function retryAfterSeconds(result: RateLimitResult): number {
+  const header = result.headers.get("Retry-After");
+  if (header != null && header !== "") {
+    const parsed = Number(header);
+    if (Number.isFinite(parsed) && parsed >= 0) return Math.floor(parsed);
+  }
+  return Math.max(0, Math.ceil((result.meta.reset - Date.now()) / 1000));
 }
 
 export function blockedResponse(

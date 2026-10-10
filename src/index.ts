@@ -8,6 +8,7 @@ export type {
   DurationString
 } from "./core/types";
 export { rateLimit, fixedWindow, slidingWindow, tokenBucket, leakyBucket } from "./ratelimit";
+export { blockedResponse, retryAfterSeconds } from "./core/response";
 export { botGuard, fingerprintRequest, evaluateRules, VDF, createVdfChallenge, defaultChallengeRenderer } from "./bot";
 export type {
   BotRules,

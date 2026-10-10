@@ -13,6 +13,8 @@ import {
   slidingWindow,
   tokenBucket,
   leakyBucket,
+  blockedResponse,
+  retryAfterSeconds,
   upstash,
   VDF,
   vercelKV
@@ -36,6 +38,8 @@ describe("public exports", () => {
     expect(typeof runGuards).toBe("function");
     expect(typeof denoKV).toBe("function");
     expect(typeof presets.apiShield).toBe("function");
+    expect(typeof blockedResponse).toBe("function");
+    expect(typeof retryAfterSeconds).toBe("function");
   });
 
   it("builds preset limiters", async () => {
