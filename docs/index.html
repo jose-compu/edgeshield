@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="EdgeShield v0.4.0 — Edge-native security toolkit with rate limiting, bot detection, CSRF protection, and pluggable storage." />
+    <meta name="description" content="EdgeShield v0.6.0 — Edge-native security toolkit with rate limiting, bot detection, CSRF protection, and pluggable storage." />
     <title>EdgeShield · Documentation</title>
     <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./assets/highlight/github.min.css" media="(prefers-color-scheme: light)" />
@@ -14,7 +14,7 @@
     <header class="site-header">
       <a class="site-header__brand" href="#overview">
         <img src="./assets/logo.svg" alt="EdgeShield" width="236" height="72" />
-        <span class="site-header__version">v0.4.0</span>
+        <span class="site-header__version">v0.6.0</span>
       </a>
       <div class="site-header__links">
         <a href="https://www.npmjs.com/package/edgeshield" target="_blank" rel="noopener noreferrer">npm</a>
@@ -169,9 +169,17 @@ if (!result.success) {
 
           <section id="rate-limiting" class="section">
             <h2>Rate limiting</h2>
-            <p>EdgeShield supports sliding and fixed window algorithms with configurable limits, windows, and key prefixes.</p>
+            <p>EdgeShield supports sliding window, fixed window, token bucket, and leaky bucket algorithms.</p>
             <div class="code-block">
-              <pre><code class="language-typescript">import { rateLimit, slidingWindow, fixedWindow } from "edgeshield/ratelimit";
+              <pre><code class="language-typescript">import {
+  rateLimit,
+  slidingWindow,
+  fixedWindow,
+  tokenBucket,
+  leakyBucket,
+  retryAfterSeconds,
+  blockedResponse
+} from "edgeshield/ratelimit";
 import { upstash } from "edgeshield/storage/upstash";
 
 const limiter = rateLimit({
@@ -179,7 +187,12 @@ const limiter = rateLimit({
   prefix: "edgeshield:api",
   algorithm: slidingWindow(100, "15m"),
   failOpen: true // default — allow traffic if storage throws
-});</code></pre>
+});
+
+const result = await limiter.check(request);
+if (!result.success) {
+  return blockedResponse(429, "rate_limited", result.headers);
+}</code></pre>
             </div>
             <h3>Algorithms</h3>
             <div class="table-wrap">
@@ -199,10 +212,20 @@ const limiter = rateLimit({
                     <td><code>fixedWindow(limit, window)</code></td>
                     <td>Discrete window buckets — simpler, lower storage cost</td>
                   </tr>
+                  <tr>
+                    <td><code>tokenBucket(capacity, refillRate)</code></td>
+                    <td>Sustained rate with short bursts up to capacity. Rate strings: <code>"1/s"</code>, <code>"10/m"</code>, <code>"100/h"</code></td>
+                  </tr>
+                  <tr>
+                    <td><code>leakyBucket(capacity, drainRate)</code></td>
+                    <td>Smooth outbound pacing; rejects when the queue is full</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
             <p>Window strings accept <code>s</code>, <code>m</code>, <code>h</code>, or <code>d</code> suffixes (e.g. <code>"15m"</code>, <code>"1h"</code>).</p>
+            <h3>429 helpers (v0.6.0)</h3>
+            <p><code>retryAfterSeconds(result)</code> returns seconds until <code>result.meta.reset</code>, preferring a numeric <code>Retry-After</code> header. <code>blockedResponse(status, reason, headers?, bodyOverride?)</code> returns a JSON <code>{ error, status }</code> body for <code>429</code> / <code>403</code>.</p>
           </section>
 
           <section id="bot-detection" class="section">
@@ -556,7 +579,7 @@ export function createMyAdapter(client: MyKVClient): StorageAdapter {
                   </tr>
                   <tr>
                     <td><code>edgeshield/ratelimit</code></td>
-                    <td><code>rateLimit</code>, <code>slidingWindow</code>, <code>fixedWindow</code></td>
+                    <td><code>rateLimit</code>, <code>slidingWindow</code>, <code>fixedWindow</code>, <code>tokenBucket</code>, <code>leakyBucket</code>, <code>retryAfterSeconds</code>, <code>blockedResponse</code></td>
                   </tr>
                   <tr>
                     <td><code>edgeshield/bot</code></td>
@@ -678,7 +701,7 @@ npm run build && npm run test:deno</code></pre>
 
           <footer class="site-footer">
             <p>
-              EdgeShield v0.4.0 ·
+              EdgeShield v0.6.0 ·
               <a href="https://github.com/jose-compu/edgeshield/blob/main/LICENSE">MIT</a> ·
               <a href="https://github.com/jose-compu/edgeshield">GitHub</a> ·
               <a href="https://www.npmjs.com/package/edgeshield">npm</a>

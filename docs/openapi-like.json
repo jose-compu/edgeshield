@@ -1,6 +1,6 @@
 {
   "name": "edgeshield",
-  "version": "0.4.0",
+  "version": "0.6.0",
   "description": "Edge-native security toolkit with rate limiting, bot detection, CSRF protection, and pluggable storage.",
   "license": "MIT",
   "repository": "https://github.com/jose-compu/edgeshield",
@@ -13,7 +13,7 @@
     {
       "path": "edgeshield/ratelimit",
       "description": "Rate limiting guards",
-      "symbols": ["rateLimit", "slidingWindow", "fixedWindow"]
+      "symbols": ["rateLimit", "slidingWindow", "fixedWindow", "tokenBucket", "leakyBucket", "retryAfterSeconds", "blockedResponse"]
     },
     {
       "path": "edgeshield/bot",
