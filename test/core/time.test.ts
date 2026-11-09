@@ -25,12 +25,12 @@ describe("time helpers", () => {
 
   it("rejects invalid rate strings", () => {
     expect(() => parseRate("1/d" as RateString)).toThrow("Invalid rate format");
-    expect(() => parseRate("0/s" as RateString)).toThrow("Rate must be positive");
+    expect(() => parseRate("0/s")).toThrow("Rate must be positive");
     expect(() => parseRate("1s" as RateString)).toThrow("Invalid rate format");
   });
 
   it("rejects non-positive durations", () => {
-    expect(() => parseDuration("0s" as DurationString)).toThrow("Duration must be positive");
+    expect(() => parseDuration("0s")).toThrow("Duration must be positive");
   });
 
   it("parses large day durations", () => {
