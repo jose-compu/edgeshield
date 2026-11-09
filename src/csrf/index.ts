@@ -38,7 +38,8 @@ function methodNeedsCsrf(method: string): boolean {
 function pathIgnored(pathname: string, patterns: string[]): boolean {
   return patterns.some((pattern) => {
     if (pattern.endsWith("/**")) {
-      return pathname.startsWith(pattern.slice(0, -3));
+      const prefix = pattern.slice(0, -3);
+      return pathname === prefix || pathname.startsWith(`${prefix}/`);
     }
     return pathname === pattern;
   });

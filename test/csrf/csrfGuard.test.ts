@@ -150,6 +150,50 @@ describe("csrfGuard", () => {
     expect(ignored.valid).toBe(true);
   });
 
+  it("ignorePaths /** matches nested paths but not siblings", async () => {
+    const guard = csrfGuard({
+      secret: SECRET,
+      ignorePaths: ["/hooks/**"]
+    });
+
+    const nested = await guard.verify(
+      new Request("https://example.com/hooks/a/b", { method: "POST" })
+    );
+    expect(nested.valid).toBe(true);
+
+    const prefixOnly = await guard.verify(
+      new Request("https://example.com/hooks", { method: "POST" })
+    );
+    expect(prefixOnly.valid).toBe(true);
+
+    const sibling = await guard.verify(
+      new Request("https://example.com/hooks-extra", { method: "POST" })
+    );
+    expect(sibling.valid).toBe(false);
+
+    const other = await guard.verify(
+      new Request("https://example.com/api", { method: "POST" })
+    );
+    expect(other.valid).toBe(false);
+  });
+
+  it("ignorePaths supports multiple patterns", async () => {
+    const guard = csrfGuard({
+      secret: SECRET,
+      ignorePaths: ["/health", "/ready", "/webhooks/**"]
+    });
+
+    await expect(
+      guard.verify(new Request("https://example.com/ready", { method: "DELETE" }))
+    ).resolves.toMatchObject({ valid: true });
+    await expect(
+      guard.verify(new Request("https://example.com/webhooks/x", { method: "PUT" }))
+    ).resolves.toMatchObject({ valid: true });
+    await expect(
+      guard.verify(new Request("https://example.com/form", { method: "POST" }))
+    ).resolves.toMatchObject({ valid: false });
+  });
+
   it("returns success from check() for valid requests", async () => {
     const guard = csrfGuard({ secret: SECRET });
     const token = await guard.generate(new Request("https://example.com/form"));

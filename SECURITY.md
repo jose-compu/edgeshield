@@ -2,23 +2,32 @@
 
 ## Supported Versions
 
-We actively monitor and provide security updates for the following versions of this project:
-
 | Version | Supported          |
 | ------- | ------------------ |
-| Active  | :white_check_mark: |
-| < 1.0.0 | :x:                |
+| Latest release on `main` | :white_check_mark: |
+| Older 0.x patch lines    | Best-effort        |
 
 ## Reporting a Vulnerability
 
-We take the security of this project seriously. If you discover any security vulnerabilities or weaknesses, please **do not** open a public GitHub issue. Instead, report them privately.
+**Do not open a public GitHub issue for security vulnerabilities.**
 
-* **Reporting Email:** Please send an email detailing the vulnerability to `security@example.com` (Maintainer: Please replace with your preferred contact email).
-* **What to Include:** A detailed description of the issue, steps to reproduce, and any potential exploit scenarios.
+Prefer one of:
 
-### Our Commitment
-* We will acknowledge receipt of your vulnerability report within 72 hours.
-* We will provide a status update regarding fixing the issue as it progresses.
-* Once the vulnerability is resolved, a patch will be deployed and appropriate credit will be given to the researcher in the release notes (unless anonymity is requested).
+1. [GitHub private vulnerability reporting](https://github.com/jose-compu/edgeshield/security/advisories/new) (recommended)
+2. Email the maintainer via the contact listed on the GitHub profile for `jose-compu`
 
-*Note: This project is a community-driven, open-source utility. We currently do not offer financial rewards or bug bounties for vulnerability disclosures.*
+Please include:
+
+- Affected package version and runtime (Node, Bun, Deno, Workers, …)
+- Description and impact
+- Steps to reproduce or a minimal proof of concept
+- Whether you need coordinated disclosure timing
+
+### Coordinated disclosure
+
+- We aim to acknowledge reports within **72 hours**.
+- We will work with you on a fix timeline before public disclosure when practical.
+- After a fix ships, we credit reporters in release notes unless you request anonymity.
+- There is **no bug bounty** program at this time.
+
+Machine-readable policy: [`security.txt`](./security.txt) at the repository root (RFC 9116).
