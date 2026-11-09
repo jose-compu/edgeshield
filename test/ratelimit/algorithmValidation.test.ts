@@ -31,9 +31,16 @@ describe("algorithm and parser validation", () => {
   });
 
   it("throws for invalid limits", () => {
-    expect(() => fixedWindow(0, "1m")).toThrow();
-    expect(() => slidingWindow(-1, "1m")).toThrow();
-    expect(() => tokenBucket(0, "1/s")).toThrow();
-    expect(() => leakyBucket(-1, "10/m")).toThrow();
+    expect(() => fixedWindow(0, "1m")).toThrow("positive integer");
+    expect(() => slidingWindow(-1, "1m")).toThrow("positive integer");
+    expect(() => tokenBucket(0, "1/s")).toThrow("positive integer");
+    expect(() => leakyBucket(-1, "10/m")).toThrow("positive integer");
+  });
+
+  it("throws for invalid window/rate parameters", () => {
+    expect(() => fixedWindow(10, "0s")).toThrow("Duration must be positive");
+    expect(() => slidingWindow(10, "bad" as never)).toThrow("Invalid duration format");
+    expect(() => tokenBucket(10, "0/s")).toThrow("Rate must be positive");
+    expect(() => leakyBucket(10, "1/x" as never)).toThrow();
   });
 });
