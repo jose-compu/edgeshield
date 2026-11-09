@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["test/**/*.test.ts"],
-    exclude: ["test/deno/**"],
+    exclude: ["test/deno/**", "test/miniflare/**"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],

@@ -4,11 +4,15 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.8.0] - Unreleased
+## [Unreleased]
+
+## [0.8.0] - 2026-11-09
+
+### Added
+
+- Miniflare / workerd CI job and `npm run test:miniflare` for Cloudflare KV adapter smoke + rate-limit integration
 
 ## [0.7.0] - 2026-11-09
-
-## [Unreleased]
 
 ### Added
 

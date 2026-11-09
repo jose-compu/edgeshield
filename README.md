@@ -301,12 +301,14 @@ All adapters run through a shared conformance suite in CI (`test/storage/adapter
 | Node.js 20/22 | `test` | lint, typecheck, coverage, build, size check |
 | Bun | `bun` | `bun run test` against source |
 | Deno 2.x | `deno` | smoke tests against built `dist/` output |
+| Miniflare / workerd | `miniflare` | Cloudflare KV adapter + rate-limit against real KV |
 
 Local commands:
 
 ```bash
 npm run test:bun
 npm run build && npm run test:deno
+npm run test:miniflare
 ```
 
 ## Algorithm cheat sheet
