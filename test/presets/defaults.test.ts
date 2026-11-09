@@ -51,4 +51,14 @@ describe("preset default limits (README parity)", () => {
     expect(windowMs).toBeGreaterThan(PRESET_DEFAULTS.page.windowMs - 5_000);
     expect(windowMs).toBeLessThanOrEqual(PRESET_DEFAULTS.page.windowMs + 5_000);
   });
+
+  it("strict default is 20 / 15m", async () => {
+    const result = await presets.strict({ storage: memory() }).check(new Request("https://example.com/"));
+    expect(result.meta?.limit).toBe(20);
+  });
+
+  it("lenient default is 1000 / 1m", async () => {
+    const result = await presets.lenient({ storage: memory() }).check(new Request("https://example.com/"));
+    expect(result.meta?.limit).toBe(1000);
+  });
 });

@@ -1,0 +1,42 @@
+name: Bug report
+description: Report unexpected behavior in EdgeShield
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Security issues: report privately via SECURITY.md (do not open a public issue).
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code or request flow
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: edgeshield version
+      placeholder: "0.6.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Runtime
+      options:
+        - Node.js
+        - Bun
+        - Deno
+        - Cloudflare Workers
+        - Other
+    validations:
+      required: true

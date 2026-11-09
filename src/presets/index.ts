@@ -74,6 +74,22 @@ export const presets = {
       algorithm: slidingWindow(input.limit ?? 300, input.window ?? "1m")
     });
   },
+  /** Tight limits for high-risk surfaces (login, signup, password reset). */
+  strict(input: ApiPresetInput) {
+    return rateLimit({
+      storage: input.storage,
+      prefix: input.prefix ?? "edgeshield:strict",
+      algorithm: slidingWindow(input.limit ?? 20, input.window ?? "15m")
+    });
+  },
+  /** Higher throughput for trusted internal or low-abuse traffic. */
+  lenient(input: ApiPresetInput) {
+    return rateLimit({
+      storage: input.storage,
+      prefix: input.prefix ?? "edgeshield:lenient",
+      algorithm: slidingWindow(input.limit ?? 1000, input.window ?? "1m")
+    });
+  },
   apiShield(input: ApiShieldInput) {
     const guards: GuardLike[] = [presets.api(input)];
     if (input.bot !== false) {

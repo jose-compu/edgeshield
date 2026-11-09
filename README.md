@@ -247,6 +247,8 @@ const storage = memory();
 const apiLimiter = presets.api({ storage, limit: 100, window: "15m" });
 const authLimiter = presets.auth({ storage });
 const pageLimiter = presets.page({ storage });
+const strictLimiter = presets.strict({ storage }); // 20 / 15m
+const lenientLimiter = presets.lenient({ storage }); // 1000 / 1m
 
 // Composite shields (rate limit + bot + optional CSRF)
 const apiShield = presets.apiShield({
@@ -307,11 +309,37 @@ npm run test:bun
 npm run build && npm run test:deno
 ```
 
+## Algorithm cheat sheet
+
+| Algorithm | Constructor | Best for | Notes |
+|---|---|---|---|
+| Sliding window | `slidingWindow(limit, window)` | API quotas with smooth edges | Counts events in a rolling window (`windowMs`). |
+| Fixed window | `fixedWindow(limit, window)` | Simple counters, cheap storage | Resets on window boundaries; can burst at edges. |
+| Token bucket | `tokenBucket(capacity, refillRate)` | Sustained rate + short bursts | `refillRate` is a rate string (`"10/s"`, `"100/m"`, …). |
+| Leaky bucket | `leakyBucket(capacity, drainRate)` | Smoothing bursty traffic | Queue drains at `drainRate`; overflow rejects. |
+
+Multi-tier policies: pass `tiers: [{ name, algorithm }, …]` to `rateLimit` so burst and sustained limits both apply (first failing tier wins).
+
 ## Troubleshooting
 
-- **Counters reset between requests:** memory storage is per-isolate. Use Upstash, Cloudflare KV, Vercel KV, or Deno KV when instances do not share RAM.
+### Storage adapters
+
+- **Counters reset between requests:** `memory()` is per-isolate / per-process. Use Upstash, Cloudflare KV, Vercel KV, or Deno KV when instances do not share RAM.
 - **Cold starts / multiple isolates:** in-process counters do not converge. Prefer durable storage for production limits.
-- **Clock skew:** window and bucket algorithms use the runtime clock. Large skew between edge regions can shorten or lengthen windows.
+- **Upstash / Redis errors:** ensure `increment` is atomic and TTL is set on first write. Fail-open (`failOpen: true`, default) allows traffic when storage throws; set `failOpen: false` to deny on errors.
+- **KV eventual consistency:** Cloudflare/Vercel KV may lag across regions; limits are best-effort, not perfect global locks.
+
+### Clock skew
+
+- Window and bucket algorithms use the **runtime wall clock** (`Date.now()`).
+- Large skew between edge regions can shorten or lengthen effective windows.
+- Keep NTP healthy on self-hosted runtimes; on managed edge, prefer shorter windows and multi-tier limits rather than relying on perfect time sync.
+- Token/leaky bucket refill math is time-based: a client jumping clocks forward can gain tokens; pair with identity binding and bot checks for abuse-sensitive routes.
+
+### CSRF `ignorePaths`
+
+- Exact paths: `"/health"` matches only that pathname.
+- Prefix globs: `"/webhooks/**"` matches `/webhooks` and `/webhooks/...`, not `/webhooks-extra`.
 
 ## Features in v0.6.0
 
