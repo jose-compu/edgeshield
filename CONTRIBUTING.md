@@ -35,6 +35,7 @@ npm run size:check
 | `npm run docs:serve` | Serve docs site locally (pulls from `docs` branch) |
 | `npm run test:bun` | Run tests with Bun |
 | `npm run build && npm run test:deno` | Run Deno smoke tests |
+| `npm run test:miniflare` | Cloudflare KV under miniflare/workerd |
 
 ## Project Structure
 

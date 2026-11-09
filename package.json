@@ -1,6 +1,6 @@
 {
   "name": "edgeshield",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "description": "Edge-native security toolkit with rate limiting, bot detection, and pluggable storage.",
   "type": "module",
   "keywords": [
@@ -111,6 +111,7 @@
     "test": "vitest run",
     "test:bun": "bun run test",
     "test:deno": "deno test --allow-read test/deno/",
+    "test:miniflare": "vitest run --config vitest.miniflare.config.ts",
     "test:coverage": "vitest run --coverage",
     "docs:serve": "node scripts/docs-serve.mjs",
     "security:audit": "npm audit --omit=dev --audit-level=moderate",
@@ -123,6 +124,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.39.5",
     "globals": "^16.5.0",
+    "miniflare": "^4.20260730.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.71.1",
