@@ -38,6 +38,27 @@ function makeResult(
   };
 }
 
+/**
+ * Build a multi-tier policy list (burst + sustained, etc.).
+ * First failing tier short-circuits in {@link rateLimit}.
+ */
+export function multiTier(...tiers: RateLimitTier[]): RateLimitTier[] {
+  if (tiers.length === 0) {
+    throw new Error("multiTier requires at least one tier");
+  }
+  const names = new Set<string>();
+  for (const tier of tiers) {
+    if (!tier.name || tier.name.trim().length === 0) {
+      throw new Error("Each rate limit tier requires a non-empty name");
+    }
+    if (names.has(tier.name)) {
+      throw new Error(`Duplicate rate limit tier name: ${tier.name}`);
+    }
+    names.add(tier.name);
+  }
+  return tiers;
+}
+
 export function rateLimit(config: RateLimitConfig): RateLimiter {
   const tiers = resolveTiers(config);
   if (tiers.length === 0) {
@@ -53,12 +74,14 @@ export function rateLimit(config: RateLimitConfig): RateLimiter {
         : defaultIdentifier(request);
       const id = sanitizeIdentifier(rawId);
 
+      let decision: RateLimitResult | null = null;
+
       for (const tier of tiers) {
         const key = `${prefix}:${tier.name}:${id}`;
         try {
           const result = await tier.algorithm.evaluate(config.storage, key, Date.now());
           if (!result.allowed) {
-            return makeResult(
+            decision = makeResult(
               false,
               "rate_limited",
               tier.algorithm.limit,
@@ -66,24 +89,48 @@ export function rateLimit(config: RateLimitConfig): RateLimiter {
               result.reset,
               tier.name
             );
+            break;
           }
         } catch {
           if (!failOpen) {
-            return makeResult(false, "storage_error", tier.algorithm.limit, 0, Date.now() + 1_000, tier.name);
+            decision = makeResult(
+              false,
+              "storage_error",
+              tier.algorithm.limit,
+              0,
+              Date.now() + 1_000,
+              tier.name
+            );
+            break;
           }
-          return makeResult(true, "storage_error", tier.algorithm.limit, tier.algorithm.limit, Date.now() + tier.algorithm.windowMs, tier.name);
+          decision = makeResult(
+            true,
+            "storage_error",
+            tier.algorithm.limit,
+            tier.algorithm.limit,
+            Date.now() + tier.algorithm.windowMs,
+            tier.name
+          );
+          break;
         }
       }
 
-      const primaryTier = tiers[0] ?? { name: "default", algorithm: fixedWindow(60, "1m") };
-      return makeResult(
-        true,
-        "ok",
-        primaryTier.algorithm.limit,
-        primaryTier.algorithm.limit,
-        Date.now() + primaryTier.algorithm.windowMs,
-        null
-      );
+      if (!decision) {
+        const primaryTier = tiers[0] ?? { name: "default", algorithm: fixedWindow(60, "1m") };
+        decision = makeResult(
+          true,
+          "ok",
+          primaryTier.algorithm.limit,
+          primaryTier.algorithm.limit,
+          Date.now() + primaryTier.algorithm.windowMs,
+          null
+        );
+      }
+
+      if (config.onDecision) {
+        await config.onDecision({ request, result: decision });
+      }
+      return decision;
     }
   };
 }

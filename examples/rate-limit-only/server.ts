@@ -29,14 +29,15 @@ createServer(async (req, res) => {
 
   const result = await limiter.check(request);
   if (!result.success) {
-    const body = blockedResponse(result);
+    const response = blockedResponse(429, result.reason, result.headers);
     const retry = retryAfterSeconds(result);
+    const text = await response.text();
     res.writeHead(result.status, {
-      "content-type": "application/json",
+      "content-type": response.headers.get("content-type") ?? "application/json",
       ...(retry != null ? { "retry-after": String(retry) } : {}),
       ...Object.fromEntries(result.headers.entries())
     });
-    res.end(JSON.stringify(body));
+    res.end(text);
     return;
   }
 

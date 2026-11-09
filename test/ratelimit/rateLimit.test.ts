@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fixedWindow, leakyBucket, rateLimit, slidingWindow, tokenBucket } from "../../src/ratelimit";
+import {
+  fixedWindow,
+  leakyBucket,
+  multiTier,
+  rateLimit,
+  slidingWindow,
+  tokenBucket
+} from "../../src/ratelimit";
 import { memory } from "../../src/storage/memory";
 
 describe("rateLimit", () => {
@@ -42,10 +49,10 @@ describe("rateLimit", () => {
     vi.spyOn(Date, "now").mockReturnValue(2_000);
     const limiter = rateLimit({
       storage: memory(),
-      tiers: [
+      tiers: multiTier(
         { name: "burst", algorithm: fixedWindow(1, "1m") },
         { name: "daily", algorithm: fixedWindow(100, "1d") }
-      ],
+      ),
       identifier: () => "user-3"
     });
 
@@ -53,6 +60,31 @@ describe("rateLimit", () => {
     const blocked = await limiter.check(new Request("https://example.com"));
     expect(blocked.success).toBe(false);
     expect(blocked.meta.tier).toBe("burst");
+  });
+
+  it("multiTier rejects empty or duplicate names", () => {
+    expect(() => multiTier()).toThrow("at least one tier");
+    expect(() =>
+      multiTier(
+        { name: "a", algorithm: fixedWindow(1, "1m") },
+        { name: "a", algorithm: fixedWindow(2, "1m") }
+      )
+    ).toThrow("Duplicate");
+  });
+
+  it("invokes onDecision analytics hook", async () => {
+    const events: string[] = [];
+    const limiter = rateLimit({
+      storage: memory(),
+      algorithm: fixedWindow(1, "1m"),
+      identifier: () => "hook-user",
+      onDecision: ({ result }) => {
+        events.push(result.reason);
+      }
+    });
+    await limiter.check(new Request("https://example.com"));
+    await limiter.check(new Request("https://example.com"));
+    expect(events).toEqual(["ok", "rate_limited"]);
   });
 
   it("fail-opens by default on storage errors", async () => {

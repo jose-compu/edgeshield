@@ -21,8 +21,9 @@ describe("upstash adapter", () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ result: null }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ result: "ok" }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ result: 2 }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ result: 1 }), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([{ result: 2 }, { result: 1 }]), { status: 200 })
+      )
       .mockResolvedValueOnce(new Response(JSON.stringify({ result: 1 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -36,7 +37,9 @@ describe("upstash adapter", () => {
     await expect(adapter.set("k", "v", 1000)).resolves.toBeUndefined();
     await expect(adapter.increment("k", 1000)).resolves.toBe(2);
     await expect(adapter.delete("k")).resolves.toBeUndefined();
-    expect(fetchMock).toHaveBeenCalledTimes(5);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    const incrCall = fetchMock.mock.calls[2]?.[0] as string | URL;
+    expect(String(incrCall)).toContain("pipeline");
   });
 
   it("throws when remote returns an error", async () => {

@@ -56,6 +56,65 @@ async function callUpstash<T>(
   }
 }
 
+/**
+ * Pipeline INCR + PEXPIRE in one HTTP round-trip (no Lua EVAL).
+ * Upstash REST: POST /pipeline with an array of Redis commands.
+ */
+async function incrWithExpire(
+  endpoint: URL,
+  token: string,
+  timeoutMs: number,
+  key: string,
+  ttlMs: number
+): Promise<number> {
+  const pipelineUrl = new URL(endpoint.toString());
+  if (!pipelineUrl.pathname.endsWith("/pipeline")) {
+    const base = pipelineUrl.pathname.endsWith("/")
+      ? pipelineUrl.pathname
+      : `${pipelineUrl.pathname}/`;
+    pipelineUrl.pathname = `${base}pipeline`.replace(/\/{2,}/g, "/");
+    if (!pipelineUrl.pathname.startsWith("/")) {
+      pipelineUrl.pathname = `/${pipelineUrl.pathname}`;
+    }
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const px = Math.max(1, Math.floor(ttlMs));
+
+  try {
+    const response = await fetch(pipelineUrl, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify([
+        ["INCR", key],
+        ["PEXPIRE", key, px]
+      ])
+    });
+    if (!response.ok) {
+      throw new Error(`Upstash request failed with status ${response.status}`);
+    }
+    const payload = (await response.json()) as UpstashResponse[] | UpstashResponse;
+    const rows = Array.isArray(payload) ? payload : [payload];
+    for (const row of rows) {
+      if (row.error) {
+        throw new Error(`Upstash error: ${row.error}`);
+      }
+    }
+    const incrResult = rows[0]?.result;
+    if (typeof incrResult !== "number") {
+      throw new Error("Upstash pipeline INCR did not return a number");
+    }
+    return incrResult;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export function upstash(options: UpstashOptions): StorageAdapter {
   if (!options.token || options.token.trim().length < 8) {
     throw new Error("Upstash token appears invalid");
@@ -72,12 +131,16 @@ export function upstash(options: UpstashOptions): StorageAdapter {
       return result ?? null;
     },
     async set(key: string, value: string, ttlMs: number): Promise<void> {
-      await callUpstash(endpoint, options.token, timeoutMs, ["SET", key, value, "PX", Math.max(1, Math.floor(ttlMs))]);
+      await callUpstash(endpoint, options.token, timeoutMs, [
+        "SET",
+        key,
+        value,
+        "PX",
+        Math.max(1, Math.floor(ttlMs))
+      ]);
     },
     async increment(key: string, ttlMs: number): Promise<number> {
-      const value = await callUpstash<number>(endpoint, options.token, timeoutMs, ["INCR", key]);
-      await callUpstash(endpoint, options.token, timeoutMs, ["PEXPIRE", key, Math.max(1, Math.floor(ttlMs))]);
-      return value;
+      return incrWithExpire(endpoint, options.token, timeoutMs, key, ttlMs);
     },
     async delete(key: string): Promise<void> {
       await callUpstash(endpoint, options.token, timeoutMs, ["DEL", key]);

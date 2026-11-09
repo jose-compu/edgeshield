@@ -24,6 +24,11 @@ export interface BotChallengeConfig {
   renderer?: ChallengeRenderer;
 }
 
+export type BotDecisionHook = (event: {
+  request: Request;
+  result: BotGuardResult;
+}) => void | Promise<void>;
+
 export interface BotGuardConfig {
   mode?: BotMode;
   rules?: BotRules;
@@ -31,6 +36,8 @@ export interface BotGuardConfig {
   vdf?: BotVdfConfig;
   challenge?: BotChallengeConfig;
   storage?: StorageAdapter;
+  /** Optional analytics hook invoked after every bot decision. */
+  onDecision?: BotDecisionHook;
 }
 
 export interface BotGuardResult {
@@ -250,36 +257,57 @@ export function botGuard(config: BotGuardConfig = {}) {
     async check(request: Request): Promise<BotGuardResult> {
       const userAgent = request.headers.get("user-agent") ?? "";
       const ruleDecision = evaluateRules(userAgent, config.rules);
+      let decision: BotGuardResult;
       if (ruleDecision === "allow") {
-        return result(true, 200, "allowlisted_ua", 0, ["allowlisted_ua"], threshold);
-      }
-      if (ruleDecision === "block") {
+        decision = result(true, 200, "allowlisted_ua", 0, ["allowlisted_ua"], threshold);
+      } else if (ruleDecision === "block") {
         if (mode === "block" || mode === "challenge") {
-          return result(false, 403, "blocked_ua", 100, ["blocked_ua"], threshold);
+          decision = result(false, 403, "blocked_ua", 100, ["blocked_ua"], threshold);
+        } else {
+          decision = result(true, 200, "blocked_ua", 100, ["blocked_ua"], threshold);
         }
-        return result(true, 200, "blocked_ua", 100, ["blocked_ua"], threshold);
-      }
-
-      const fingerprint = fingerprintRequest(request);
-      if (fingerprint.score >= threshold) {
-        if (mode === "challenge" && vdfEnabled) {
-          return handleVdfFlow(request, fingerprint, {
-            htmlChallenge: true,
-            challengeReason: "challenge_required"
-          });
-        }
-        if (mode === "block") {
-          if (vdfEnabled) {
-            return handleVdfFlow(request, fingerprint, {
-              htmlChallenge: false,
-              challengeReason: "vdf_challenge_required"
+      } else {
+        const fingerprint = fingerprintRequest(request);
+        if (fingerprint.score >= threshold) {
+          if (mode === "challenge" && vdfEnabled) {
+            decision = await handleVdfFlow(request, fingerprint, {
+              htmlChallenge: true,
+              challengeReason: "challenge_required"
             });
+          } else if (mode === "block") {
+            if (vdfEnabled) {
+              decision = await handleVdfFlow(request, fingerprint, {
+                htmlChallenge: false,
+                challengeReason: "vdf_challenge_required"
+              });
+            } else {
+              decision = result(
+                false,
+                403,
+                "blocked_suspicious",
+                fingerprint.score,
+                fingerprint.signals,
+                threshold
+              );
+            }
+          } else {
+            decision = result(
+              true,
+              200,
+              "detected_suspicious",
+              fingerprint.score,
+              fingerprint.signals,
+              threshold
+            );
           }
-          return result(false, 403, "blocked_suspicious", fingerprint.score, fingerprint.signals, threshold);
+        } else {
+          decision = result(true, 200, "passed", fingerprint.score, fingerprint.signals, threshold);
         }
-        return result(true, 200, "detected_suspicious", fingerprint.score, fingerprint.signals, threshold);
       }
-      return result(true, 200, "passed", fingerprint.score, fingerprint.signals, threshold);
+      if (config.onDecision) {
+        await config.onDecision({ request, result: decision });
+      }
+      return decision;
     }
   };
 }
