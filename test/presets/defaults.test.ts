@@ -9,36 +9,46 @@ const PRESET_DEFAULTS = {
   page: { limit: 300, windowMs: 60 * 1000 }
 } as const;
 
-type PresetName = keyof typeof PRESET_DEFAULTS;
-
-async function assertPresetDefaults(name: PresetName): Promise<void> {
-  const storage = memory();
-  const factory =
-    name === "api" ? presets.api : name === "auth" ? presets.auth : presets.page;
-  const limiter = factory({ storage });
-  const result = await limiter.check(new Request("https://example.com/"));
-  expect(result.success).toBe(true);
-  expect(result.meta?.limit).toBe(PRESET_DEFAULTS[name].limit);
-  const reset = result.meta?.reset;
-  expect(typeof reset).toBe("number");
-  if (typeof reset !== "number") {
-    return;
-  }
-  const windowMs = reset - Date.now();
-  expect(windowMs).toBeGreaterThan(PRESET_DEFAULTS[name].windowMs - 5_000);
-  expect(windowMs).toBeLessThanOrEqual(PRESET_DEFAULTS[name].windowMs + 5_000);
-}
-
 describe("preset default limits (README parity)", () => {
   it("api default limit and window match documented values", async () => {
-    await assertPresetDefaults("api");
+    const result = await presets.api({ storage: memory() }).check(new Request("https://example.com/"));
+    expect(result.success).toBe(true);
+    expect(result.meta?.limit).toBe(PRESET_DEFAULTS.api.limit);
+    const reset = result.meta?.reset;
+    expect(typeof reset).toBe("number");
+    if (typeof reset !== "number") {
+      return;
+    }
+    const windowMs = reset - Date.now();
+    expect(windowMs).toBeGreaterThan(PRESET_DEFAULTS.api.windowMs - 5_000);
+    expect(windowMs).toBeLessThanOrEqual(PRESET_DEFAULTS.api.windowMs + 5_000);
   });
 
   it("auth default limit and window match documented values", async () => {
-    await assertPresetDefaults("auth");
+    const result = await presets.auth({ storage: memory() }).check(new Request("https://example.com/"));
+    expect(result.success).toBe(true);
+    expect(result.meta?.limit).toBe(PRESET_DEFAULTS.auth.limit);
+    const reset = result.meta?.reset;
+    expect(typeof reset).toBe("number");
+    if (typeof reset !== "number") {
+      return;
+    }
+    const windowMs = reset - Date.now();
+    expect(windowMs).toBeGreaterThan(PRESET_DEFAULTS.auth.windowMs - 5_000);
+    expect(windowMs).toBeLessThanOrEqual(PRESET_DEFAULTS.auth.windowMs + 5_000);
   });
 
   it("page default limit and window match documented values", async () => {
-    await assertPresetDefaults("page");
+    const result = await presets.page({ storage: memory() }).check(new Request("https://example.com/"));
+    expect(result.success).toBe(true);
+    expect(result.meta?.limit).toBe(PRESET_DEFAULTS.page.limit);
+    const reset = result.meta?.reset;
+    expect(typeof reset).toBe("number");
+    if (typeof reset !== "number") {
+      return;
+    }
+    const windowMs = reset - Date.now();
+    expect(windowMs).toBeGreaterThan(PRESET_DEFAULTS.page.windowMs - 5_000);
+    expect(windowMs).toBeLessThanOrEqual(PRESET_DEFAULTS.page.windowMs + 5_000);
   });
 });
