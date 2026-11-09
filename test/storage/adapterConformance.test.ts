@@ -38,33 +38,46 @@ function createVercelClient() {
   };
 }
 
+function runUpstashCommand(
+  store: Map<string, string>,
+  command: Array<string | number>
+): { result?: unknown; error?: string } {
+  const [op, key, ...rest] = command;
+  if (op === "GET") {
+    return { result: store.get(String(key)) ?? null };
+  }
+  if (op === "SET") {
+    store.set(String(key), String(rest[0]));
+    return { result: "OK" };
+  }
+  if (op === "INCR") {
+    const next = Number.parseInt(store.get(String(key)) ?? "0", 10) + 1;
+    store.set(String(key), String(next));
+    return { result: next };
+  }
+  if (op === "PEXPIRE") {
+    return { result: 1 };
+  }
+  if (op === "DEL") {
+    store.delete(String(key));
+    return { result: 1 };
+  }
+  return { error: "unknown command" };
+}
+
 function createUpstashMock() {
   const store = new Map<string, string>();
-  const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+  const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
     const body = typeof init?.body === "string" ? init.body : "[]";
-    const command = JSON.parse(body) as Array<string | number>;
-    const [op, key, ...rest] = command;
+    const parsed = JSON.parse(body) as Array<string | number> | Array<Array<string | number>>;
 
-    if (op === "GET") {
-      return new Response(JSON.stringify({ result: store.get(String(key)) ?? null }), { status: 200 });
+    if (Array.isArray(parsed[0])) {
+      const rows = (parsed as Array<Array<string | number>>).map((cmd) => runUpstashCommand(store, cmd));
+      return new Response(JSON.stringify(rows), { status: 200 });
     }
-    if (op === "SET") {
-      store.set(String(key), String(rest[0]));
-      return new Response(JSON.stringify({ result: "OK" }), { status: 200 });
-    }
-    if (op === "INCR") {
-      const next = Number.parseInt(store.get(String(key)) ?? "0", 10) + 1;
-      store.set(String(key), String(next));
-      return new Response(JSON.stringify({ result: next }), { status: 200 });
-    }
-    if (op === "PEXPIRE") {
-      return new Response(JSON.stringify({ result: 1 }), { status: 200 });
-    }
-    if (op === "DEL") {
-      store.delete(String(key));
-      return new Response(JSON.stringify({ result: 1 }), { status: 200 });
-    }
-    return new Response(JSON.stringify({ error: "unknown command" }), { status: 200 });
+
+    const row = runUpstashCommand(store, parsed as Array<string | number>);
+    return new Response(JSON.stringify(row), { status: 200 });
   });
   vi.stubGlobal("fetch", fetchMock);
   return upstash({

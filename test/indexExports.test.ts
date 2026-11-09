@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  cloudflareRateLimit,
+  createAstroMiddleware,
   createMiddleware,
+  createSvelteKitHandle,
   createVdfChallenge,
   csrfGuard,
   denoKV,
   honoMiddleware,
   memory,
+  multiTier,
   presets,
   rateLimit,
   runGuards,
@@ -40,6 +44,10 @@ describe("public exports", () => {
     expect(typeof presets.apiShield).toBe("function");
     expect(typeof blockedResponse).toBe("function");
     expect(typeof retryAfterSeconds).toBe("function");
+    expect(typeof multiTier).toBe("function");
+    expect(typeof createSvelteKitHandle).toBe("function");
+    expect(typeof createAstroMiddleware).toBe("function");
+    expect(typeof cloudflareRateLimit).toBe("function");
   });
 
   it("builds preset limiters", async () => {

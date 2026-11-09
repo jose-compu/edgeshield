@@ -69,6 +69,10 @@
       "types": "./dist/storage/deno-kv.d.ts",
       "import": "./dist/storage/deno-kv.js"
     },
+    "./storage/cloudflare-rate-limit": {
+      "types": "./dist/storage/cloudflare-rate-limit.d.ts",
+      "import": "./dist/storage/cloudflare-rate-limit.js"
+    },
     "./middleware/nextjs": {
       "types": "./dist/middleware/nextjs.d.ts",
       "import": "./dist/middleware/nextjs.js"
@@ -80,6 +84,14 @@
     "./middleware/generic": {
       "types": "./dist/middleware/generic.d.ts",
       "import": "./dist/middleware/generic.js"
+    },
+    "./middleware/sveltekit": {
+      "types": "./dist/middleware/sveltekit.d.ts",
+      "import": "./dist/middleware/sveltekit.js"
+    },
+    "./middleware/astro": {
+      "types": "./dist/middleware/astro.d.ts",
+      "import": "./dist/middleware/astro.js"
     },
     "./presets": {
       "types": "./dist/presets/index.d.ts",

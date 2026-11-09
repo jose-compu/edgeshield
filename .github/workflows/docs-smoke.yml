@@ -1,0 +1,31 @@
+name: docs-smoke
+
+on:
+  push:
+    branches: [docs]
+  pull_request:
+    branches: [docs]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Ensure docs entrypoint exists
+        run: |
+          set -euo pipefail
+          if [ -f index.html ]; then
+            test -s index.html
+            grep -qi '<html' index.html
+            grep -qi 'edgeshield\|EdgeShield' index.html
+          elif [ -f docs/index.html ]; then
+            test -s docs/index.html
+            grep -qi '<html' docs/index.html
+          else
+            echo "No index.html on docs branch; listing root:"
+            ls -la
+            exit 1
+          fi

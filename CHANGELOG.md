@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `multiTier()` helper and `onDecision` analytics hooks on rate limit / bot guards
+- `presets.strict` / `presets.lenient`
+- SvelteKit and Astro middleware helpers
+- Cloudflare Rate Limiting binding adapter
+- Algorithm cheat sheet, expanded troubleshooting, `security.txt`, GitHub issue/PR templates
+- `examples/rate-limit-only` sample
+
+### Changed
+
+- Upstash `increment` uses REST pipeline (INCR + PEXPIRE) without Lua EVAL
+- CSRF `ignorePaths` `/**` matching uses path-segment boundaries
+- Bot fingerprint flags common crawler and CLI user-agents
+
 ## [0.6.0] - 2026-10-10
 
 ### Added

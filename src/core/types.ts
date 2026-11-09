@@ -42,6 +42,11 @@ export interface RateLimitResult {
   };
 }
 
+export type RateLimitDecisionHook = (event: {
+  request: Request;
+  result: RateLimitResult;
+}) => void | Promise<void>;
+
 export interface RateLimitConfig {
   storage: StorageAdapter;
   algorithm?: RateLimitAlgorithm;
@@ -49,6 +54,8 @@ export interface RateLimitConfig {
   identifier?: IdentifierFn;
   prefix?: string;
   failOpen?: boolean;
+  /** Optional analytics hook invoked after every decision. */
+  onDecision?: RateLimitDecisionHook;
 }
 
 export interface RateLimiter {

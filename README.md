@@ -318,7 +318,22 @@ npm run build && npm run test:deno
 | Token bucket | `tokenBucket(capacity, refillRate)` | Sustained rate + short bursts | `refillRate` is a rate string (`"10/s"`, `"100/m"`, …). |
 | Leaky bucket | `leakyBucket(capacity, drainRate)` | Smoothing bursty traffic | Queue drains at `drainRate`; overflow rejects. |
 
-Multi-tier policies: pass `tiers: [{ name, algorithm }, …]` to `rateLimit` so burst and sustained limits both apply (first failing tier wins).
+Multi-tier policies (burst + sustained): use `multiTier(...)` so the first failing tier short-circuits:
+
+```ts
+import { rateLimit, multiTier, slidingWindow, memory } from "edgeshield";
+
+const limiter = rateLimit({
+  storage: memory(),
+  tiers: multiTier(
+    { name: "burst", algorithm: slidingWindow(10, "1s") },
+    { name: "sustained", algorithm: slidingWindow(1000, "1h") }
+  ),
+  onDecision: ({ result }) => {
+    // analytics: result.success, result.reason, result.meta.tier
+  }
+});
+```
 
 ## Troubleshooting
 
@@ -341,16 +356,16 @@ Multi-tier policies: pass `tiers: [{ name, algorithm }, …]` to `rateLimit` so 
 - Exact paths: `"/health"` matches only that pathname.
 - Prefix globs: `"/webhooks/**"` matches `/webhooks` and `/webhooks/...`, not `/webhooks-extra`.
 
-## Features in v0.6.0
+## Features (current)
 
 - Sliding window, fixed window, token bucket, and leaky bucket algorithms
-- Multi-tier rate limiting
-- Bot detection (`detect`, `block`, and `challenge` modes)
+- Multi-tier rate limiting (`multiTier` + `onDecision` analytics hooks)
+- Bot detection (`detect`, `block`, and `challenge` modes) with crawler/CLI UA signals
 - Sloth VDF challenge support for suspicious bot traffic
 - CSRF protection (`double-submit` and `origin-check`)
-- Memory, Upstash, Cloudflare KV, Vercel KV, and Deno KV adapters
-- Next.js, Hono, and generic middleware helpers
-- Configuration presets and composite shields
+- Memory, Upstash (pipeline INCR+PEXPIRE), Cloudflare KV / Rate Limit binding, Vercel KV, Deno KV
+- Next.js, Hono, SvelteKit, Astro, and generic middleware helpers
+- Configuration presets (`api` / `auth` / `page` / `strict` / `lenient`) and composite shields
 - Bundle size budget enforced in CI (`npm run size:check`)
 - TypeScript-first API
 - `retryAfterSeconds(result)` and `blockedResponse()` for 429 handling
