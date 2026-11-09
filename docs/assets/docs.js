@@ -15,15 +15,21 @@
     .filter(Boolean);
 
   if (toggle && sidebar) {
+    const syncExpanded = () => {
+      toggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
+    };
     toggle.addEventListener('click', () => {
       sidebar.classList.toggle('open');
+      syncExpanded();
     });
 
     links.forEach((link) => {
       link.addEventListener('click', () => {
         sidebar.classList.remove('open');
+        syncExpanded();
       });
     });
+    syncExpanded();
   }
 
   function setActiveLink() {

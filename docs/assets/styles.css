@@ -450,7 +450,37 @@ td code {
   }
 }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  padding: 0.75rem 1rem;
+  background: var(--accent, #33d1ff);
+  color: #0a1020;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 6px 0;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.site-header a:focus-visible,
+.sidebar a:focus-visible,
+.menu-toggle:focus-visible,
+.content a:focus-visible {
+  outline: 2px solid var(--accent, #0ea5e9);
+  outline-offset: 2px;
+}
+
 @media (prefers-color-scheme: dark) {
+  .site-logo {
+    /* Improve contrast of dark-ink logo on navy header */
+    filter: brightness(1.15) contrast(1.05);
+  }
+
   :root {
     --bg: #0a1020;
     --bg-subtle: #111827;

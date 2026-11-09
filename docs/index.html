@@ -11,21 +11,22 @@
     <link rel="stylesheet" href="./assets/styles.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
     <header class="site-header">
       <a class="site-header__brand" href="#overview">
-        <img src="./assets/logo.svg" alt="EdgeShield" width="236" height="72" />
+        <img class="site-logo" src="./assets/logo.svg" alt="EdgeShield" width="236" height="72" />
         <span class="site-header__version">v0.6.0</span>
       </a>
-      <div class="site-header__links">
+      <nav class="site-header__links" aria-label="External links">
         <a href="https://www.npmjs.com/package/edgeshield" target="_blank" rel="noopener noreferrer">npm</a>
         <a href="https://github.com/jose-compu/edgeshield" target="_blank" rel="noopener noreferrer">GitHub</a>
         <a href="./openapi-like.json">API JSON</a>
-      </div>
-      <button class="menu-toggle" type="button" aria-label="Toggle navigation">Menu</button>
+      </nav>
+      <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="docs-sidebar">Menu</button>
     </header>
 
     <div class="layout">
-      <aside class="sidebar">
+      <aside class="sidebar" id="docs-sidebar" aria-label="Documentation">
         <div class="sidebar__group">
           <div class="sidebar__label">Getting started</div>
           <nav>
@@ -59,12 +60,15 @@
           <nav>
             <a href="#exports">Package exports</a>
             <a href="#comparison">Comparison</a>
+            <a href="#guides">Guides</a>
+            <a href="#migration">Migration</a>
+            <a href="#changelog">Changelog</a>
             <a href="#development">Development</a>
           </nav>
         </div>
       </aside>
 
-      <main class="content">
+      <main id="main" class="content" tabindex="-1">
         <div class="content__inner">
           <section id="overview" class="section">
             <h1 class="page-title">Documentation</h1>
@@ -673,6 +677,42 @@ export function createMyAdapter(client: MyKVClient): StorageAdapter {
                 </tbody>
               </table>
             </div>
+          </section>
+
+          <section id="guides" class="section">
+            <h2>Guides</h2>
+            <h3>Burst + sustained limits</h3>
+            <p>Use <code>multiTier</code> so a short burst window and a longer sustained window both apply (first failure wins).</p>
+            <div class="code-block">
+              <pre><code class="language-typescript">import { rateLimit, multiTier, slidingWindow, memory } from "edgeshield";
+
+const limiter = rateLimit({
+  storage: memory(),
+  tiers: multiTier(
+    { name: "burst", algorithm: slidingWindow(10, "1s") },
+    { name: "sustained", algorithm: slidingWindow(1000, "1h") }
+  )
+});</code></pre>
+            </div>
+            <h3>Analytics hooks</h3>
+            <p>Pass <code>onDecision</code> on <code>rateLimit</code> or <code>botGuard</code> to emit allow/deny events to your metrics backend.</p>
+            <h3>Dark mode logo</h3>
+            <p class="callout">The header logo uses a light-on-dark treatment under <code>prefers-color-scheme: dark</code> so contrast stays readable on the navy background. Favicon remains a high-contrast shield glyph.</p>
+          </section>
+
+          <section id="migration" class="section">
+            <h2>Migration</h2>
+            <ul>
+              <li><strong>0.5 → 0.6:</strong> Prefer <code>retryAfterSeconds</code> and <code>blockedResponse</code> for 429 bodies instead of hand-rolled JSON.</li>
+              <li><strong>Presets:</strong> <code>presets.strict</code> / <code>presets.lenient</code> added; defaults for api/auth/page unchanged.</li>
+              <li><strong>CSRF ignorePaths:</strong> <code>/hooks/**</code> matches <code>/hooks</code> and nested paths only (not <code>/hooks-extra</code>).</li>
+              <li><strong>Upstash:</strong> <code>increment</code> uses REST pipeline (INCR+PEXPIRE); no Lua EVAL required.</li>
+            </ul>
+          </section>
+
+          <section id="changelog" class="section">
+            <h2>Changelog</h2>
+            <p>Full history lives in the repository <a href="https://github.com/jose-compu/edgeshield/blob/main/CHANGELOG.md">CHANGELOG.md</a>. Site version badge tracks the latest published line on npm.</p>
           </section>
 
           <section id="development" class="section">
